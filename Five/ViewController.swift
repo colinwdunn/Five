@@ -40,6 +40,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         loadItems()
     }
     
+    override func viewWillAppear(animated: Bool) {
+        tableView.reloadData()
+    }
+    
     override func viewDidLayoutSubviews() {
         tableView.frame = view.frame
     }

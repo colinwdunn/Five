@@ -52,9 +52,9 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     }
     
     override func viewDidLayoutSubviews() {
-        weightButton.frame = CGRectMake(15, 100, 100, 30)
-        increase.frame = CGRectMake(15, 200, 100, 30)
-        decrease.frame = CGRectMake(115, 200, 100, 30)
+        weightButton.frame = CGRectMake(15, 80, 100, 30)
+        increase.frame = CGRectMake(115, 80, 50, 30)
+        decrease.frame = CGRectMake(165, 80, 50, 30)
     }
     
     func presentWeightKeyboard() {
@@ -73,8 +73,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
             record.setObject(weight, forKey: "Weight")
             modify()
         }
-        
-        println(weight)
     }
     
     func weightPerSide(weight: Int) -> Float {
@@ -84,13 +82,14 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     }
     
     func changeWeight(sender: UIButton) {
+        var changedWeight:Int!
         if sender.titleLabel == increase.titleLabel {
-            self.currentWeight = self.currentWeight + 5
+            changedWeight = self.currentWeight + 5
         } else {
-            self.currentWeight = self.currentWeight - 5
+            changedWeight = self.currentWeight - 5
         }
         
-        recordWeight(currentWeight)
+        recordWeight(changedWeight)
     }
 
     
@@ -102,6 +101,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
             }
         }
         db.addOperation(operation)
+        println("Record modified")
     }
 
 }
