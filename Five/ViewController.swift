@@ -10,6 +10,7 @@ import UIKit
 import CloudKit
 
 var exercises = [CKRecord]()
+var workouts = [exercises]
 let db = CKContainer.defaultContainer().privateCloudDatabase
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
@@ -62,14 +63,49 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 exercises = results as [CKRecord]
                 self.tableView.reloadData()
-                println("Exercises: \(exercises)")
+                
+                //Create first empty array
+                println("Create exercise group")
+                var groupedExercises = [CKRecord]()
+                
+                
+                for (index, value) in enumerate(exercises) {
+                    let type = value.objectForKey("Type") as Int
+                    let date = value.objectForKey("creationDate") as NSDate
+                    var previousType:Int!
+                    var previousDate:NSDate!
+                    
+                    if index == 0 {
+                        previousType = exercises[index - 1].objectForKey("Type") as Int
+                        previousDate = exercises[index - 1].objectForKey("creationDate") as NSDate
+                        
+                        if type == previousType {
+                            //Append to previously created array
+                            println("Append exercise to previously created exercise group")
+                            groupedExercises.append(value)
+                        } else {
+                            //Reset array
+                            println("Append exercise group to workouts")
+                            workouts.append(groupedExercises)
+                            groupedExercises = [CKRecord]()
+                            println("Reset exercise group")
+                            println("Grouped Exercises: \(groupedExercises)")
+                        }
+                        
+                    } else {
+                        println("Append first exercise group")
+                        groupedExercises.append(value)
+                    }
+                }
+            println("Workouts: \(workouts.count)")
+                for i in 0...workouts.count - 1 {
+                    println("workouts[\(i)] \(workouts[i])")
+                }
             }
         }
     }
     
     func addItem() {
-        var records = [CKRecord]()
-        
         var lastTypeIsZero = false
         if exercises.isEmpty {
         } else {
@@ -96,7 +132,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 }
                 
                 dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                    records.insert(record, atIndex: 0)
                     exercises.insert(record, atIndex: 0)
                     let indexPath = NSIndexPath(forRow: exercises.count - 1, inSection: 0)
                     self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
@@ -109,8 +144,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         } else {
             let detailViewController = DetailViewController()
             detailViewController.record = exercises[0]
-            println("Records: \(records)")
-            detailViewController.records = records
             self.navigationController?.pushViewController(detailViewController, animated: true)
         }
     }

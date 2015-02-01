@@ -22,7 +22,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     
     var currentWeight:Int!
     var record:CKRecord!
-    var records:[CKRecord]!
+    var workout = [CKRecord]()
     
     override init() {
         super.init(nibName: nil, bundle: nil)
@@ -69,8 +69,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
 //        self.view.addSubview(collectionView)
         
         collectionData = ["foo", "bar", "baz", "four", "five", "foo", "bar", "baz", "four", "five"]
-        
-        println("DVC Records: \(records)")
     }
     
     override func viewDidLayoutSubviews() {
