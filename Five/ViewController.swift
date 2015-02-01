@@ -9,8 +9,8 @@
 import UIKit
 import CloudKit
 
-let db = CKContainer.defaultContainer().privateCloudDatabase
 var exercises = [CKRecord]()
+let db = CKContainer.defaultContainer().privateCloudDatabase
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
@@ -49,8 +49,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     
     func loadItems() {
+        
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "Exercise", predicate: predicate)
+        query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        
         db.performQuery(query, inZoneWithID: nil) { (results, error) -> Void in
             if error != nil {
                 println(error.localizedDescription)
@@ -59,30 +62,57 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 exercises = results as [CKRecord]
                 self.tableView.reloadData()
+                println("Exercises: \(exercises)")
             }
         }
     }
     
     func addItem() {
+        var records = [CKRecord]()
         
-        let record = CKRecord(recordType: "Exercise")
-        record.setObject(45, forKey: "Weight")
-        
-        db.saveRecord(record) { (record, error) -> Void in
-            if error != nil {
-                println(error.localizedDescription)
-            }
-            
-            dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                exercises.insert(record, atIndex: 0)
-                let indexPath = NSIndexPath(forRow: exercises.count - 1, inSection: 0)
-                self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+        var lastTypeIsZero = false
+        if exercises.isEmpty {
+        } else {
+            if exercises[0].objectForKey("Type") as Int == 0 {
+                lastTypeIsZero = true
             }
         }
         
-        let detailViewController = DetailViewController()
-        detailViewController.record = exercises[0]
-        self.navigationController?.pushViewController(detailViewController, animated: true)
+        for i in 1...3 {
+            let record = CKRecord(recordType: "Exercise")
+            record.setObject(45, forKey: "Weight")
+            
+            if lastTypeIsZero {
+                record.setObject(1, forKey: "Type")
+                println("Created type 1")
+            } else {
+                record.setObject(0, forKey: "Type")
+                println("Creatd type 0")
+            }
+            
+            db.saveRecord(record) { (record, error) -> Void in
+                if error != nil {
+                    println(error.localizedDescription)
+                }
+                
+                dispatch_async(dispatch_get_main_queue()) { () -> Void in
+                    records.insert(record, atIndex: 0)
+                    exercises.insert(record, atIndex: 0)
+                    let indexPath = NSIndexPath(forRow: exercises.count - 1, inSection: 0)
+                    self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+                }
+            }
+        }
+        
+        if exercises.isEmpty {
+            println("Exercises is empty")
+        } else {
+            let detailViewController = DetailViewController()
+            detailViewController.record = exercises[0]
+            println("Records: \(records)")
+            detailViewController.records = records
+            self.navigationController?.pushViewController(detailViewController, animated: true)
+        }
     }
     
     func removeItem(item: CKRecord) {
@@ -94,7 +124,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 if let index = find(exercises, item) {
                     exercises.removeAtIndex(index)
-                    
                     let indexPath = NSIndexPath(forRow: index, inSection: 0)
                     self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
                 }
@@ -112,10 +141,10 @@ extension ViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as TableCell
         let data = exercises[indexPath.row]
         
-        let date = data.creationDate.description
+        let date = data.creationDate
         let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "EEEE',' MMM d"
-        let dateString = dateFormatter.stringFromDate(NSDate())
+        dateFormatter.dateFormat = "EEEE, MMM d h:m:s a"
+        let dateString = dateFormatter.stringFromDate(date)
         
         cell.title.text = dateString
         

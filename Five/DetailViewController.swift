@@ -11,12 +11,18 @@ import CloudKit
 
 class DetailViewController: UIViewController, weightKeyboardDelegate {
     
+    let kCellIdentifier = "Cell"
+    
+    var collectionView:UICollectionView!
+    var collectionData = [String]()
+    
     let weightButton = UIButton()
     let increase = UIButton()
     let decrease = UIButton()
     
     var currentWeight:Int!
     var record:CKRecord!
+    var records:[CKRecord]!
     
     override init() {
         super.init(nibName: nil, bundle: nil)
@@ -49,12 +55,31 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         
         decrease.addTarget(self, action: "changeWeight:", forControlEvents: UIControlEvents.TouchUpInside)
         view.addSubview(decrease)
+        
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 70, height: 70)
+        layout.minimumLineSpacing = 1.0
+        layout.minimumInteritemSpacing = 1.0
+        
+        collectionView = UICollectionView(frame: CGRectZero, collectionViewLayout: layout)
+        collectionView.registerClass(RepsCell.self, forCellWithReuseIdentifier: kCellIdentifier)
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.backgroundColor = UIColor.clearColor()
+//        self.view.addSubview(collectionView)
+        
+        collectionData = ["foo", "bar", "baz", "four", "five", "foo", "bar", "baz", "four", "five"]
+        
+        println("DVC Records: \(records)")
     }
     
     override func viewDidLayoutSubviews() {
         weightButton.frame = CGRectMake(15, 80, 100, 30)
         increase.frame = CGRectMake(115, 80, 50, 30)
         decrease.frame = CGRectMake(165, 80, 50, 30)
+        
+        collectionView.frame = self.view.frame
+        collectionView.frame.origin.y = 80
     }
     
     func presentWeightKeyboard() {
@@ -104,6 +129,26 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         println("Record modified")
     }
 
+}
+
+extension DetailViewController: UICollectionViewDataSource {
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return collectionData.count
+    }
+    
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(kCellIdentifier, forIndexPath: indexPath) as RepsCell
+        let data = collectionData[indexPath.item]
+        // Add any data to the cell
+        return cell as UICollectionViewCell
+    }
+}
+
+extension DetailViewController: UICollectionViewDelegate {
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        let data = collectionData[indexPath.item]
+        // Do something like push or present a new view controller
+    }
 }
 
 extension Float {

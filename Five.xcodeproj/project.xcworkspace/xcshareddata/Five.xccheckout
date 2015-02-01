@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>C3E4C593-234B-444A-8630-5D845EE60B9B</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Five</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>8A961DB85DAB6A2828748F1D74E537F2CE1B731D</key>
+		<string>https://github.com/colinwdunn/Five.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Five.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>8A961DB85DAB6A2828748F1D74E537F2CE1B731D</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/colinwdunn/Five.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>8A961DB85DAB6A2828748F1D74E537F2CE1B731D</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>8A961DB85DAB6A2828748F1D74E537F2CE1B731D</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Five</string>
+		</dict>
+	</array>
+</dict>
+</plist>
