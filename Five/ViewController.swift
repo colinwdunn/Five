@@ -10,13 +10,33 @@ import UIKit
 import CloudKit
 
 var exercises = [CKRecord]()
-var workouts = [exercises]
 let db = CKContainer.defaultContainer().privateCloudDatabase
+
+enum exerciseName:Int {
+    case Squat, BenchPress, Row, OverheadPress, Deadlift
+    func description() -> String {
+        switch self {
+        case .Squat:
+            return "Squat"
+        case .BenchPress:
+            return "Bench Press"
+        case Row:
+            return "Row"
+        case .OverheadPress:
+            return "Overhead Press"
+        case .Deadlift:
+            return "Deadlift"
+        default:
+            return String(self.rawValue)
+        }
+    }
+}
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     let tableView = UITableView()
     let kCellIdentifier = "Cell"
+    var days = [[CKRecord]]()
     
     override init() {
         super.init(nibName: nil, bundle: nil)
@@ -31,9 +51,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.registerClass(TableCell.self, forCellReuseIdentifier: kCellIdentifier)
+        tableView.registerClass(DayCell.self, forCellReuseIdentifier: kCellIdentifier)
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.rowHeight = 160
         view.addSubview(tableView)
         
         navigationItem.setRightBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "addItem"), animated: true)
@@ -42,6 +63,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     
     override func viewWillAppear(animated: Bool) {
+        self.days = self.buildIndex(exercises)
         tableView.reloadData()
     }
     
@@ -62,52 +84,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 exercises = results as [CKRecord]
+                self.days = self.buildIndex(exercises)
                 self.tableView.reloadData()
                 
-                var dates = [NSDate]()
-                var result = [[CKRecord]]()
-                
-                //Find unique dates
-                for exercise in exercises {
-                    var date = self.roundedDate(exercise.objectForKey("creationDate") as NSDate)
-
-                    if !contains(dates, date) {
-                        dates.append(date)
-                        println("Date is unique")
-                    }
-                }
-                
-                println("Dates: \(dates)")
-                
-                
-//                Iterate over dates and add matching records
-                for date in dates {
-                    var recordForDate = [CKRecord]()
-                    
-                    for (index, exercise) in enumerate(exercises) {
-                        let created = self.roundedDate(exercise.objectForKey("creationDate") as NSDate)
-                        
-                        if date == created {
-                            let record = exercises[index] as CKRecord
-                            recordForDate.append(record)
-                            println("Dates match")
-                        }
-                    }
-                    result.append(recordForDate)
-                    println("RecordForDate: \(recordForDate)")
-                }
-                
-                println("Result count: \(result.count)")
-                println(result)
+                println("Days: \(self.days)")
             }
         }
-    }
-    
-    func roundedDate(date: NSDate) -> NSDate {
-        let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "M-d-yy h:m:s"
-        let string = dateFormatter.stringFromDate(date)
-        return dateFormatter.dateFromString(string)!
     }
     
     func addItem() {
@@ -122,6 +104,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         for i in 1...3 {
             let record = CKRecord(recordType: "Exercise")
             record.setObject(45, forKey: "Weight")
+            record.setObject(exerciseName.Squat.rawValue, forKey: "Name")
             
             if lastTypeIsZero {
                 record.setObject(1, forKey: "Type")
@@ -137,9 +120,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 }
                 
                 dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                    exercises.insert(record, atIndex: 0)
-                    let indexPath = NSIndexPath(forRow: exercises.count - 1, inSection: 0)
-                    self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+                    exercises.append(record)
+                    self.buildIndex(exercises)
+                    
+                    let indexPath = NSIndexPath(forRow: self.days.count - 1, inSection: 0)
+//                    self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
                 }
             }
         }
@@ -161,33 +146,76 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 if let index = find(exercises, item) {
-                    exercises.removeAtIndex(index)
-                    let indexPath = NSIndexPath(forRow: index, inSection: 0)
-                    self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+                    
+                    for i in 1...3 {
+                        exercises.removeAtIndex(index)
+                        let indexPath = NSIndexPath(forRow: index, inSection: 0)
+                        self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+                    }
                 }
             }
         }
+    }
+    
+    func buildIndex(records: [CKRecord]) -> [[CKRecord]] {
+        var dates = [NSDate]()
+        var result = [[CKRecord]]()
+        
+        for record in records {
+            var date = self.roundedDate(record.objectForKey("creationDate") as NSDate)
+            
+            if !contains(dates, date) {
+                dates.append(date)
+            }
+        }
+        
+        for date in dates {
+            var recordForDate = [CKRecord]()
+            
+            for (index, exercise) in enumerate(exercises) {
+                let created = self.roundedDate(exercise.objectForKey("creationDate") as NSDate)
+                
+                if date == created {
+                    let record = exercises[index] as CKRecord
+                    recordForDate.append(record)
+                }
+            }
+            result.append(recordForDate)
+        }
+        
+        return result
+    }
+    
+    func roundedDate(date: NSDate) -> NSDate {
+        let dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "MM-dd-yy h:mm"
+        let string = dateFormatter.stringFromDate(date)
+        return dateFormatter.dateFromString(string)!
     }
 }
 
 extension ViewController: UITableViewDataSource {
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return exercises.count
+        return days.count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as TableCell
-        let data = exercises[indexPath.row]
+        let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as DayCell
+        let data = days[indexPath.row]
         
-        let date = data.creationDate
+        let date = data[indexPath.row].creationDate
         let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "EEEE, MMM d h:m:s a"
+        dateFormatter.dateFormat = "EEEE, MMM d"
         let dateString = dateFormatter.stringFromDate(date)
+        cell.date.text = dateString
         
-        cell.title.text = dateString
+        cell.exerciseOne.text = exerciseName(rawValue: data[0].objectForKey("Name") as Int)?.description()
+        cell.exerciseTwo.text = exerciseName(rawValue: data[1].objectForKey("Name") as Int)?.description()
+        cell.exerciseThree.text = exerciseName(rawValue: data[2].objectForKey("Name") as Int)?.description()
         
-        let weight:Int = data.objectForKey("Weight") as Int
-        cell.subTitle.text = weight.description
+        cell.weightOne.text = (data[0].objectForKey("Weight") as Int).description
+        cell.weightTwo.text = (data[1].objectForKey("Weight") as Int).description
+        cell.weightThree.text = (data[2].objectForKey("Weight") as Int).description
         
         return cell
     }
