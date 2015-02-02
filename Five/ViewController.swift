@@ -64,45 +64,50 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 exercises = results as [CKRecord]
                 self.tableView.reloadData()
                 
-                //Create first empty array
-                println("Create exercise group")
-                var groupedExercises = [CKRecord]()
+                var dates = [NSDate]()
+                var result = [[CKRecord]]()
                 
-                
-                for (index, value) in enumerate(exercises) {
-                    let type = value.objectForKey("Type") as Int
-                    let date = value.objectForKey("creationDate") as NSDate
-                    var previousType:Int!
-                    var previousDate:NSDate!
-                    
-                    if index == 0 {
-                        previousType = exercises[index - 1].objectForKey("Type") as Int
-                        previousDate = exercises[index - 1].objectForKey("creationDate") as NSDate
-                        
-                        if type == previousType {
-                            //Append to previously created array
-                            println("Append exercise to previously created exercise group")
-                            groupedExercises.append(value)
-                        } else {
-                            //Reset array
-                            println("Append exercise group to workouts")
-                            workouts.append(groupedExercises)
-                            groupedExercises = [CKRecord]()
-                            println("Reset exercise group")
-                            println("Grouped Exercises: \(groupedExercises)")
-                        }
-                        
-                    } else {
-                        println("Append first exercise group")
-                        groupedExercises.append(value)
+                //Find unique dates
+                for exercise in exercises {
+                    var date = self.roundedDate(exercise.objectForKey("creationDate") as NSDate)
+
+                    if !contains(dates, date) {
+                        dates.append(date)
+                        println("Date is unique")
                     }
                 }
-            println("Workouts: \(workouts.count)")
-                for i in 0...workouts.count - 1 {
-                    println("workouts[\(i)] \(workouts[i])")
+                
+                println("Dates: \(dates)")
+                
+                
+//                Iterate over dates and add matching records
+                for date in dates {
+                    var recordForDate = [CKRecord]()
+                    
+                    for (index, exercise) in enumerate(exercises) {
+                        let created = self.roundedDate(exercise.objectForKey("creationDate") as NSDate)
+                        
+                        if date == created {
+                            let record = exercises[index] as CKRecord
+                            recordForDate.append(record)
+                            println("Dates match")
+                        }
+                    }
+                    result.append(recordForDate)
+                    println("RecordForDate: \(recordForDate)")
                 }
+                
+                println("Result count: \(result.count)")
+                println(result)
             }
         }
+    }
+    
+    func roundedDate(date: NSDate) -> NSDate {
+        let dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "M-d-yy h:m:s"
+        let string = dateFormatter.stringFromDate(date)
+        return dateFormatter.dateFromString(string)!
     }
     
     func addItem() {
