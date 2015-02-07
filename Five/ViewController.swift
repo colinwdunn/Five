@@ -57,6 +57,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         tableView.rowHeight = 160
         view.addSubview(tableView)
         
+        self.navigationItem.title = "Five"
         navigationItem.setRightBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "addItem"), animated: true)
         
         loadItems()
@@ -133,7 +134,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             println("Exercises is empty")
         } else {
             let detailViewController = DetailViewController()
-            detailViewController.record = exercises[0]
+//            detailViewController.record = exercises[0]
             self.navigationController?.pushViewController(detailViewController, animated: true)
         }
     }
@@ -226,7 +227,7 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let detailViewController = DetailViewController()
-        detailViewController.record = exercises[indexPath.row]
+        detailViewController.exercises = days[indexPath.row]
         navigationController?.pushViewController(detailViewController, animated: true)
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
     }

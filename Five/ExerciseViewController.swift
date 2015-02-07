@@ -1,15 +1,15 @@
 //
-//  DetailViewController.swift
+//  ExerciseViewController.swift
 //  Five
 //
-//  Created by Colin Dunn on 1/29/15.
+//  Created by Colin Dunn on 2/1/15.
 //  Copyright (c) 2015 Colin Dunn. All rights reserved.
 //
 
 import UIKit
 import CloudKit
 
-class DetailViewController: UIViewController, weightKeyboardDelegate {
+class ExerciseViewController: UIViewController, weightKeyboardDelegate {
     
     let kCellIdentifier = "Cell"
     
@@ -22,7 +22,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     
     var currentWeight:Int!
     var record:CKRecord!
-    var workout = [CKRecord]()
+    
+    var exercises:[CKRecord]!
     
     override init() {
         super.init(nibName: nil, bundle: nil)
@@ -31,11 +32,9 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     required init(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        view.backgroundColor = UIColor.whiteColor()
         
         weightButton.setTitleColor(UIColor.blackColor(), forState: .Normal)
         weightButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Left
@@ -66,9 +65,11 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.backgroundColor = UIColor.clearColor()
-//        self.view.addSubview(collectionView)
+        //        self.view.addSubview(collectionView)
         
         collectionData = ["foo", "bar", "baz", "four", "five", "foo", "bar", "baz", "four", "five"]
+        
+        println("Exercises: \(exercises)")
     }
     
     override func viewDidLayoutSubviews() {
@@ -79,7 +80,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         collectionView.frame = self.view.frame
         collectionView.frame.origin.y = 80
     }
-    
     func presentWeightKeyboard() {
         let weightKeyboard = WeightKeyboardViewController()
         weightKeyboard.weight = currentWeight
@@ -89,7 +89,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     }
     
     func recordWeight(weight: Int) {
-        weightButton.setTitle("\(weight.description) / \(Float(weightPerSide(weight)).formatted)", forState: .Normal)
+        weightButton.setTitle("(weight.description) / \(Float(weightPerSide(weight)).formatted)", forState: .Normal)
         
         if currentWeight != weight {
             currentWeight = weight
@@ -114,7 +114,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         
         recordWeight(changedWeight)
     }
-
+    
     
     func modify() {
         let operation = CKModifyRecordsOperation(recordsToSave: [record], recordIDsToDelete: nil)
@@ -126,10 +126,10 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         db.addOperation(operation)
         println("Record modified")
     }
-
+    
 }
 
-extension DetailViewController: UICollectionViewDataSource {
+extension ExerciseViewController: UICollectionViewDataSource {
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return collectionData.count
     }
@@ -142,7 +142,7 @@ extension DetailViewController: UICollectionViewDataSource {
     }
 }
 
-extension DetailViewController: UICollectionViewDelegate {
+extension ExerciseViewController: UICollectionViewDelegate {
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         let data = collectionData[indexPath.item]
         // Do something like push or present a new view controller
