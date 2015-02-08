@@ -9,7 +9,7 @@
 import UIKit
 
 @objc protocol weightKeyboardDelegate {
-    optional func recordWeight(weight: Int)
+    optional func setWeight(value: Int)
     optional func weightPerSide(weight: Int) -> Float
 }
 
@@ -44,6 +44,7 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
             pickerData.append(index)
         }
         
+        println("Weight \(weight)")
         picker.selectRow((weight - 45) / 5, inComponent: 0, animated: false)
         
         background.backgroundColor = UIColor.whiteColor()
@@ -96,7 +97,7 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
     }
     
     func doneTap() {
-        delegate?.recordWeight?(weight)
+        delegate?.setWeight?(weight)
         dismiss()
     }
     
@@ -119,8 +120,8 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
     
     func setWeightPerSideLabel() {
         let weight = (pickerData[picker.selectedRowInComponent(0)].description).toInt()
-        var weightPerSide = delegate?.weightPerSide!(weight!)
-        weightPerSideLabel.text = weightPerSide?.description
+        var weightPerSide = delegate?.weightPerSide!(weight!).formatted
+        weightPerSideLabel.text = weightPerSide
     }
 
 }

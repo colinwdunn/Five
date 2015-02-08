@@ -12,7 +12,7 @@ import CloudKit
 class DayCell: UITableViewCell {
     
     let titleFont = UIFont(name: "HelveticaNeue-Medium", size: 16)
-    let subtitleFont = UIFont(name: "HelveticaNeue", size: 16)
+    let subtitleFont = UIFont.systemFontOfSize(16)
     
     let date = UILabel()
     let exerciseOne = UILabel()

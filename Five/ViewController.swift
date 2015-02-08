@@ -50,14 +50,15 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         tableView.registerClass(DayCell.self, forCellReuseIdentifier: kCellIdentifier)
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = 160
         view.addSubview(tableView)
         
-        self.navigationItem.title = "Five"
+        navigationItem.title = "Five"
+        navigationController?.navigationBar.tintColor = tintColor
+        navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
         navigationItem.setRightBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "addItem"), animated: true)
         
         loadItems()
@@ -65,7 +66,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     override func viewWillAppear(animated: Bool) {
         self.days = self.buildIndex(exercises)
-        tableView.reloadData()
+        loadItems()
     }
     
     override func viewDidLayoutSubviews() {
@@ -73,7 +74,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     
     func loadItems() {
-        
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "Exercise", predicate: predicate)
         query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
@@ -95,8 +95,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     func addItem() {
         var lastTypeIsZero = false
-        if exercises.isEmpty {
-        } else {
+        if !exercises.isEmpty {
             if exercises[0].objectForKey("Type") as Int == 0 {
                 lastTypeIsZero = true
             }
@@ -104,8 +103,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         for i in 1...3 {
             let record = CKRecord(recordType: "Exercise")
-            record.setObject(45, forKey: "Weight")
-            record.setObject(exerciseName.Squat.rawValue, forKey: "Name")
+            record.setObject(0, forKey: "Name")
+            record.setObject(45 * i, forKey: "Weight")
             
             if lastTypeIsZero {
                 record.setObject(1, forKey: "Type")
@@ -123,7 +122,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 dispatch_async(dispatch_get_main_queue()) { () -> Void in
                     exercises.append(record)
                     self.buildIndex(exercises)
-                    
                     let indexPath = NSIndexPath(forRow: self.days.count - 1, inSection: 0)
 //                    self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
                 }
@@ -134,7 +132,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             println("Exercises is empty")
         } else {
             let detailViewController = DetailViewController()
-//            detailViewController.record = exercises[0]
+            detailViewController.exercises = days[0]
             self.navigationController?.pushViewController(detailViewController, animated: true)
         }
     }
@@ -204,7 +202,7 @@ extension ViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as DayCell
         let data = days[indexPath.row]
         
-        let date = data[indexPath.row].creationDate
+        let date = data[0].creationDate
         let dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "EEEE, MMM d"
         let dateString = dateFormatter.stringFromDate(date)
