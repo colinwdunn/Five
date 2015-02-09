@@ -36,7 +36,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     let tableView = UITableView()
     let kCellIdentifier = "Cell"
-    var days = [[CKRecord]]()
+    var days:[[CKRecord]] = [[CKRecord]]() {
+        didSet {
+            self.tableView.reloadData()
+        }
+    }
     
     override init() {
         super.init(nibName: nil, bundle: nil)
@@ -60,12 +64,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         navigationController?.navigationBar.tintColor = tintColor
         navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
         navigationItem.setRightBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "addItem"), animated: true)
-        
-        loadItems()
     }
     
     override func viewWillAppear(animated: Bool) {
-        self.days = self.buildIndex(exercises)
+        days = self.buildIndex(exercises)
         loadItems()
     }
     
@@ -86,25 +88,29 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 exercises = results as [CKRecord]
                 self.days = self.buildIndex(exercises)
-                self.tableView.reloadData()
-                
-                println("Days: \(self.days)")
+//                self.tableView.reloadData()
+                println("Days (\(self.days.count)): \(self.days)")
             }
         }
     }
     
     func addItem() {
         var lastTypeIsZero = false
+        
         if !exercises.isEmpty {
             if exercises[0].objectForKey("Type") as Int == 0 {
                 lastTypeIsZero = true
             }
         }
         
+        var startTime = NSDate()
+        
         for i in 1...3 {
             let record = CKRecord(recordType: "Exercise")
+            record.setObject(startTime, forKey: "startTime")
             record.setObject(0, forKey: "Name")
             record.setObject(45 * i, forKey: "Weight")
+            record.setObject(0, forKey: "Reps")
             
             if lastTypeIsZero {
                 record.setObject(1, forKey: "Type")
@@ -122,19 +128,16 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 dispatch_async(dispatch_get_main_queue()) { () -> Void in
                     exercises.append(record)
                     self.buildIndex(exercises)
+                    
                     let indexPath = NSIndexPath(forRow: self.days.count - 1, inSection: 0)
-//                    self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+                    self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
                 }
             }
         }
         
-        if exercises.isEmpty {
-            println("Exercises is empty")
-        } else {
-            let detailViewController = DetailViewController()
-            detailViewController.exercises = days[0]
-            self.navigationController?.pushViewController(detailViewController, animated: true)
-        }
+        let detailViewController = DetailViewController()
+        detailViewController.exercisesForDay = days[0]
+        self.navigationController?.pushViewController(detailViewController, animated: true)
     }
     
     func removeItem(item: CKRecord) {
@@ -161,7 +164,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         var result = [[CKRecord]]()
         
         for record in records {
-            var date = self.roundedDate(record.objectForKey("creationDate") as NSDate)
+            var date = record.objectForKey("startTime") as NSDate
             
             if !contains(dates, date) {
                 dates.append(date)
@@ -172,7 +175,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             var recordForDate = [CKRecord]()
             
             for (index, exercise) in enumerate(exercises) {
-                let created = self.roundedDate(exercise.objectForKey("creationDate") as NSDate)
+                let created = exercise.objectForKey("startTime") as NSDate
                 
                 if date == created {
                     let record = exercises[index] as CKRecord
@@ -183,13 +186,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         }
         
         return result
-    }
-    
-    func roundedDate(date: NSDate) -> NSDate {
-        let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "MM-dd-yy h:mm"
-        let string = dateFormatter.stringFromDate(date)
-        return dateFormatter.dateFromString(string)!
     }
 }
 
@@ -225,7 +221,7 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let detailViewController = DetailViewController()
-        detailViewController.exercises = days[indexPath.row]
+        detailViewController.exercisesForDay = days[indexPath.row]
         navigationController?.pushViewController(detailViewController, animated: true)
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
     }

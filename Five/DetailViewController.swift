@@ -9,9 +9,10 @@
 import UIKit
 import CloudKit
 
-class DetailViewController: UIViewController, weightKeyboardDelegate {
+class DetailViewController: UIViewController, weightKeyboardDelegate, UITableViewDelegate, UITableViewDataSource {
     
-    var exercises = [CKRecord]()
+    var exercisesForDay = [CKRecord]()
+    var exercisesForName = [[CKRecord]]()
     var tabNames = [String]()
     var segmentedControl:UISegmentedControl!
     let separator = UIView()
@@ -22,9 +23,15 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     var increaseWeight:RoundedButton!
     var decreaseWeight:RoundedButton!
     
-    let kCellIdentifier = "Cell"
-    var collectionView:UICollectionView!
-    var collectionData = [String]()
+    let kCellIdentifier = "RepsCell"
+    
+    var tableView: UITableView!
+    
+    var startTime: NSDate!
+    var type: Int!
+    var sets:Int = 1
+    var reps: Int!
+    var name: Int!
     
     override init() {
         super.init(nibName: nil, bundle: nil)
@@ -36,7 +43,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let date = exercises[0].creationDate
+        
+        let date = exercisesForDay[0].creationDate
         let dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "EEEE, MMM d"
         
@@ -44,24 +52,29 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         
         view.backgroundColor = UIColor.whiteColor()
         
-        let exerciseType = exercises[0].objectForKey("Type") as Int
+        tableView = UITableView(frame: CGRectZero, style: .Plain)
+        tableView.registerClass(RepsCell.self, forCellReuseIdentifier: kCellIdentifier)
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.tableFooterView = UIView(frame: CGRectZero)
+        tableView.separatorStyle = UITableViewCellSeparatorStyle.None
+        tableView.rowHeight = 60
+        tableView.allowsSelection = false
+        tableView.scrollEnabled = false
         
-        if exerciseType == 0 {
-            exercises[0].setObject(exerciseName.Squat.rawValue, forKey: "Name")
-            exercises[1].setObject(exerciseName.BenchPress.rawValue, forKey: "Name")
-            exercises[2].setObject(exerciseName.Row.rawValue, forKey: "Name")
-        } else {
-            exercises[0].setObject(exerciseName.Squat.rawValue, forKey: "Name")
-            exercises[1].setObject(exerciseName.OverheadPress.rawValue, forKey: "Name")
-            exercises[2].setObject(exerciseName.Deadlift.rawValue, forKey: "Name")
+        view.addSubview(tableView)
+        
+        for i in 0...5 {
+            let x = CGFloat(i) * (view.frame.width - 41)/5 + 20
+            let gridLine = UIView(frame: CGRectMake(x, 80, 1, 310))
+            gridLine.backgroundColor = colorWithAlpha(lightTextColor, 0.25)
+            view.addSubview(gridLine)
         }
-        
-        modify()
         
         weightButton.setTitleColor(tintColor, forState: .Normal)
         weightButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Left
         weightButton.setTitleColor(colorWithAlpha(tintColor, 0.5), forState: .Highlighted)
-        weightButton.addTarget(self, action: "presentWeightKeyboard", forControlEvents: UIControlEvents.TouchUpInside)
+        weightButton.addTarget(self, action: "presentWeightKeyboard", forControlEvents: .TouchUpInside)
         view.addSubview(weightButton)
         weightPerSideLabel.textColor = lightTextColor
         view.addSubview(weightPerSideLabel)
@@ -79,9 +92,9 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         let highlighted = NSDictionary(objects: [font, colorWithAlpha(lightTextColor, 0.5)], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
         let selected = NSDictionary(objects: [font, tintColor], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
         
-        segmentedControl.setTitleTextAttributes(normal, forState: UIControlState.Normal)
-        segmentedControl.setTitleTextAttributes(highlighted, forState: UIControlState.Highlighted)
-        segmentedControl.setTitleTextAttributes(selected, forState: UIControlState.Selected)
+        segmentedControl.setTitleTextAttributes(normal, forState: .Normal)
+        segmentedControl.setTitleTextAttributes(highlighted, forState: .Highlighted)
+        segmentedControl.setTitleTextAttributes(selected, forState: .Selected)
         segmentedControl.addTarget(self, action: "tabTouched:", forControlEvents: .ValueChanged)
 
         view.addSubview(segmentedControl)
@@ -90,30 +103,35 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         view.addSubview(separator)
         
         increaseWeight = RoundedButton(color: tintColor, title: "+5")
-        increaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: UIControlEvents.TouchUpInside)
+        increaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: .TouchUpInside)
         view.addSubview(increaseWeight)
         
         decreaseWeight = RoundedButton(color: accentColor, title: "-5")
-        decreaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: UIControlEvents.TouchUpInside)
+        decreaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: .TouchUpInside)
         view.addSubview(decreaseWeight)
         
-        weight = exercises[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as Int
+        println("Exercises: \(exercisesForDay)")
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        exercisesForName = buildIndex(exercisesForDay)
+        //        println("Exercises for Day \(exercisesForDay.count): \(exercisesForDay)")
+        weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as Int
+        type = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Type") as Int
+        updateSelectedValues()
+        
+        if type == 0 {
+            exercisesForDay[0].setObject(exerciseName.Squat.rawValue, forKey: "Name")
+            exercisesForDay[1].setObject(exerciseName.BenchPress.rawValue, forKey: "Name")
+            exercisesForDay[2].setObject(exerciseName.Row.rawValue, forKey: "Name")
+        } else {
+            exercisesForDay[0].setObject(exerciseName.Squat.rawValue, forKey: "Name")
+            exercisesForDay[1].setObject(exerciseName.OverheadPress.rawValue, forKey: "Name")
+            exercisesForDay[2].setObject(exerciseName.Deadlift.rawValue, forKey: "Name")
+        }
+        
+        modify()
         setWeight(weight)
-        
-        println("Exercises: \(exercises)")
-        
-        let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: 106.0, height: 106.0)
-        layout.minimumLineSpacing = 1.0
-        layout.minimumInteritemSpacing = 1.0
-        
-        collectionView = UICollectionView(frame: CGRectZero, collectionViewLayout: layout)
-        collectionView.registerClass(CollectionCell.self, forCellWithReuseIdentifier: kCellIdentifier)
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        self.view.addSubview(collectionView)
-        
-        collectionData = ["foo", "bar", "baz"]
     }
     
     override func viewDidLayoutSubviews() {
@@ -123,7 +141,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         decreaseWeight.frame = CGRectMake(view.frame.width - 118, view.frame.height - segmentedControl.frame.height - 64, 44, 44)
         segmentedControl.frame = CGRectMake(0, view.frame.height - 60, view.frame.width, 60)
         separator.frame = CGRectMake(20, view.frame.height - segmentedControl.frame.height - 1, view.frame.width - 40, 1)
-        collectionView.frame = self.view.frame
+        tableView.frame = CGRectMake(20, 25, view.frame.width - 40, tableView.rowHeight * 6)
     }
     
     func presentWeightKeyboard() {
@@ -141,7 +159,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
         
         if weight != value {
             weight = value
-            exercises[segmentedControl.selectedSegmentIndex].setObject(weight, forKey: "Weight")
+            exercisesForDay[segmentedControl.selectedSegmentIndex].setObject(weight, forKey: "Weight")
             modify()
         }
     }
@@ -164,20 +182,21 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
     
     func setTabNames() {
         for i in 0...2 {
-            let name = exerciseName(rawValue: exercises[i].objectForKey("Name") as Int)?.description()
+            let name = exerciseName(rawValue: exercisesForDay[i].objectForKey("Name") as Int)?.description()
             tabNames.append(name!)
         }
     }
     
     func tabTouched(sender: UISegmentedControl) {
         println("Tab \(sender.selectedSegmentIndex) touched")
-        weight = exercises[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as Int
+        weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as Int
         setWeight(weight)
+        updateSelectedValues()
     }
     
     func modify() {
         for i in 0...2 {
-            let operation = CKModifyRecordsOperation(recordsToSave: [exercises[i]], recordIDsToDelete: nil)
+            let operation = CKModifyRecordsOperation(recordsToSave: [exercisesForDay[i]], recordIDsToDelete: nil)
             operation.modifyRecordsCompletionBlock = { saved, deleted, error in
                 if error != nil {
                     println("Modify Error: \(error?.localizedDescription)")
@@ -186,24 +205,109 @@ class DetailViewController: UIViewController, weightKeyboardDelegate {
             db.addOperation(operation)
         }
     }
-}
-
-extension CollectionViewController: UICollectionViewDataSource {
-    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return collectionData.count
+    
+    func repsSegmentChanged(sender: UISegmentedControl) {
+        println("Row: \(sender.tag), Index: \(sender.selectedSegmentIndex)")
+        println("Sets \(sets)")
+        println("Current exercise: \(exercisesForName[segmentedControl.selectedSegmentIndex])")
+        
+        let selectedExerciseGroup = exercisesForName[segmentedControl.selectedSegmentIndex]
+        let modifiedExercise = selectedExerciseGroup[sender.tag]
+        modifiedExercise.setObject(sender.selectedSegmentIndex + 1, forKey: "Reps")
+        
+        modify()
+        addItem()
+        
+        if sets < 5 && sender.tag == sets - 1 {
+            sets += 1
+            let indexPath = NSIndexPath(forRow: self.sets - 1, inSection: 0)
+            tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
+        }
+        
+        updateSelectedValues()
     }
     
-    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(kCellIdentifier, forIndexPath: indexPath) as CollectionCell
-        let data = collectionData[indexPath.item]
-        // Add any data to the cell
-        return cell as UICollectionViewCell
+    func updateSelectedValues() {
+        println("Exercise for Name \(exercisesForName.count): \(exercisesForName)")
+        let selected = exercisesForName[segmentedControl.selectedSegmentIndex]
+        startTime = selected[0].objectForKey("startTime") as NSDate
+        name = selected[0].objectForKey("Name") as Int
+        weight = selected[0].objectForKey("Weight") as Int
+        type = selected[0].objectForKey("Type") as Int
+        
+        println("Selected: \(exerciseName(rawValue: name)?.description()), \(weight) lbs")
+    }
+    
+    func addItem() {
+        let record = CKRecord(recordType: "Exercise")
+        record.setObject(startTime, forKey: "startTime")
+        record.setObject(name, forKey: "Name")
+        record.setObject(weight, forKey: "Weight")
+        record.setObject(type, forKey: "Type")
+        
+        db.saveRecord(record) { (record, error) -> Void in
+            if error != nil {
+                println(error.localizedDescription)
+            }
+            
+            dispatch_async(dispatch_get_main_queue()) { () -> Void in
+                self.exercisesForName[self.segmentedControl.selectedSegmentIndex].append(record)
+            }
+        }
+    }
+    
+    func buildIndex(records: [CKRecord]) -> [[CKRecord]] {
+        var names = [Int]()
+        var result = [[CKRecord]]()
+        
+        for record in records {
+            var name = record.objectForKey("Name") as Int
+            
+            if !contains(names, name) {
+                names.append(name)
+            }
+            
+            println("Types (\(names.count)): \(names)")
+        }
+        
+        for name in names {
+            var recordForName = [CKRecord]()
+            
+            for (index, exercise) in enumerate(exercisesForDay) {
+                let existingName = exercise.objectForKey("Name") as Int
+                
+                if name == existingName {
+                    let record = exercisesForDay[index] as CKRecord
+                    recordForName.append(record)
+                }
+            }
+            result.append(recordForName)
+            
+            println("Result \(result.count): \(result)")
+        }
+        
+        return result
     }
 }
 
-extension CollectionViewController: UICollectionViewDelegate {
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        let data = collectionData[indexPath.item]
-        // Do something like push or present a new view controller
+extension DetailViewController: UITableViewDataSource {
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return sets
     }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as RepsCell
+        cell.segmentedControl.addTarget(self, action: "repsSegmentChanged:", forControlEvents: .ValueChanged)
+        cell.segmentedControl.tag = indexPath.row
+        return cell
+    }
+}
+
+extension DetailViewController: UITableViewDelegate {
+    
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
+    }
+    
 }
