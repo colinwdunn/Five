@@ -85,22 +85,18 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         var startTime = NSDate()
         
-        let typeZeroNames = [exerciseName.Squat.rawValue, exerciseName.BenchPress.rawValue, exerciseName.Row.rawValue]
-        let typeOneNames = [exerciseName.Squat.rawValue, exerciseName.OverheadPress.rawValue, exerciseName.Deadlift.rawValue]
-        
         for i in 1...3 {
             let record = CKRecord(recordType: "Exercise")
             record.setObject(startTime, forKey: "startTime")
+            record.setObject(0, forKey: "Name")
             record.setObject(45 * i, forKey: "Weight")
             record.setObject(0, forKey: "Reps")
             
             if lastTypeIsZero {
                 record.setObject(1, forKey: "Type")
-                record.setObject(typeOneNames[i - 1], forKey: "Name")
                 println("Created type 1")
             } else {
                 record.setObject(0, forKey: "Type")
-                record.setObject(typeZeroNames[i - 1], forKey: "Name")
                 println("Creatd type 0")
             }
             
@@ -119,11 +115,17 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             }
         }
         
+<<<<<<< HEAD
         if !exercisesForDay.isEmpty {
             let detailViewController = DetailViewController()
             detailViewController.exercisesForDay = exercisesByDay[0]
             self.navigationController?.pushViewController(detailViewController, animated: true)
         }
+=======
+        let detailViewController = DetailViewController()
+        detailViewController.exercisesForDay = days[0]
+        self.navigationController?.pushViewController(detailViewController, animated: true)
+>>>>>>> parent of 20365e5... Moved type/name logic to view controller
     }
     
     func removeItem(item: CKRecord) {
@@ -194,7 +196,7 @@ extension ViewController: UITableViewDataSource {
         let dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "EEEE, MMM d"
         let dateString = dateFormatter.stringFromDate(date)
-        cell.date.text = "\(dateString) (\(data.count))"
+        cell.date.text = dateString
         
         cell.exerciseOne.text = exerciseName(rawValue: data[0].objectForKey("Name") as Int)?.description()
         cell.exerciseTwo.text = exerciseName(rawValue: data[1].objectForKey("Name") as Int)?.description()

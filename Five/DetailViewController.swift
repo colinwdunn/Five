@@ -79,8 +79,9 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         weightPerSideLabel.textColor = lightTextColor
         view.addSubview(weightPerSideLabel)
         
+        setTabNames()
+        
         segmentedControl = UISegmentedControl(items: tabNames)
-        println("segmentedControl value changed")
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.tintColor = UIColor.clearColor()
         
@@ -108,15 +109,29 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         decreaseWeight = RoundedButton(color: accentColor, title: "-5")
         decreaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: .TouchUpInside)
         view.addSubview(decreaseWeight)
+        
+        println("Exercises: \(exercisesForDay)")
     }
     
     override func viewWillAppear(animated: Bool) {
         exercisesForName = buildIndex(exercisesForDay)
-        println("Exercise for name (\(exercisesForName.count)): \(exercisesForName)")
+        //        println("Exercises for Day \(exercisesForDay.count): \(exercisesForDay)")
+        weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as Int
+        type = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Type") as Int
         updateSelectedValues()
         
+        if type == 0 {
+            exercisesForDay[0].setObject(exerciseName.Squat.rawValue, forKey: "Name")
+            exercisesForDay[1].setObject(exerciseName.BenchPress.rawValue, forKey: "Name")
+            exercisesForDay[2].setObject(exerciseName.Row.rawValue, forKey: "Name")
+        } else {
+            exercisesForDay[0].setObject(exerciseName.Squat.rawValue, forKey: "Name")
+            exercisesForDay[1].setObject(exerciseName.OverheadPress.rawValue, forKey: "Name")
+            exercisesForDay[2].setObject(exerciseName.Deadlift.rawValue, forKey: "Name")
+        }
+        
+        modify()
         setWeight(weight)
-        setTabNames()
     }
     
     override func viewDidLayoutSubviews() {
@@ -167,14 +182,13 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     func setTabNames() {
         for i in 0...2 {
-            let record = exercisesForName[i][0]
-            let int = record.objectForKey("Name") as Int
-            let string = exerciseName(rawValue: int)?.description()
-            tabNames.append(string!)
+            let name = exerciseName(rawValue: exercisesForDay[i].objectForKey("Name") as Int)?.description()
+            tabNames.append(name!)
         }
     }
     
     func tabTouched(sender: UISegmentedControl) {
+        println("Tab \(sender.selectedSegmentIndex) touched")
         weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as Int
         setWeight(weight)
         updateSelectedValues()
@@ -209,10 +223,12 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             let indexPath = NSIndexPath(forRow: self.sets - 1, inSection: 0)
             tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
         }
+        
+        updateSelectedValues()
     }
     
     func updateSelectedValues() {
-        println(segmentedControl.selectedSegmentIndex)
+        println("Exercise for Name \(exercisesForName.count): \(exercisesForName)")
         let selected = exercisesForName[segmentedControl.selectedSegmentIndex]
         startTime = selected[0].objectForKey("startTime") as NSDate
         name = selected[0].objectForKey("Name") as Int
@@ -250,6 +266,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             if !contains(names, name) {
                 names.append(name)
             }
+            
+            println("Types (\(names.count)): \(names)")
         }
         
         for name in names {
@@ -264,6 +282,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
                 }
             }
             result.append(recordForName)
+            
+            println("Result \(result.count): \(result)")
         }
         
         return result
