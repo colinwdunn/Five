@@ -9,34 +9,14 @@
 import UIKit
 import CloudKit
 
-var exercises = [CKRecord]()
+var records = [CKRecord]()
 let db = CKContainer.defaultContainer().privateCloudDatabase
-
-enum exerciseName:Int {
-    case Squat, BenchPress, Row, OverheadPress, Deadlift
-    func description() -> String {
-        switch self {
-        case .Squat:
-            return "Squat"
-        case .BenchPress:
-            return "Bench Press"
-        case Row:
-            return "Row"
-        case .OverheadPress:
-            return "Overhead Press"
-        case .Deadlift:
-            return "Deadlift"
-        default:
-            return String(self.rawValue)
-        }
-    }
-}
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     let tableView = UITableView()
     let kCellIdentifier = "Cell"
-    var days:[[CKRecord]] = [[CKRecord]]() {
+    var exercisesForDay:[[[CKRecord]]] = [[[CKRecord]]]() {
         didSet {
             self.tableView.reloadData()
         }
@@ -67,7 +47,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     
     override func viewWillAppear(animated: Bool) {
-        days = self.buildIndex(exercises)
+        exercisesByDay = self.buildIndex(records)
         loadItems()
     }
     
@@ -86,10 +66,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             }
             
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                exercises = results as [CKRecord]
-                self.days = self.buildIndex(exercises)
+                records = results as [CKRecord]
+                self.exercisesByDay = self.buildIndex(records)
 //                self.tableView.reloadData()
-                println("Days (\(self.days.count)): \(self.days)")
+                println("Days (\(self.exercisesForDay.count)): \(self.exercisesForDay)")
             }
         }
     }
@@ -97,8 +77,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     func addItem() {
         var lastTypeIsZero = false
         
-        if !exercises.isEmpty {
-            if exercises[0].objectForKey("Type") as Int == 0 {
+        if !records.isEmpty {
+            if records[0].objectForKey("Type") as Int == 0 {
                 lastTypeIsZero = true
             }
         }
@@ -130,18 +110,18 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 }
                 
                 dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                    exercises.append(record)
-                    self.buildIndex(exercises)
+                    records.append(record)
+                    self.buildIndex(records)
                     
-                    let indexPath = NSIndexPath(forRow: self.days.count - 1, inSection: 0)
+                    let indexPath = NSIndexPath(forRow: self.exercisesForDay.count - 1, inSection: 0)
                     self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
                 }
             }
         }
         
-        if !days.isEmpty {
+        if !exercisesForDay.isEmpty {
             let detailViewController = DetailViewController()
-            detailViewController.exercisesForDay = days[0]
+            detailViewController.exercisesForDay = exercisesByDay[0]
             self.navigationController?.pushViewController(detailViewController, animated: true)
         }
     }
@@ -153,10 +133,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             }
             
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                if let index = find(exercises, item) {
+                if let index = find(records, item) {
                     
                     for i in 1...3 {
-                        exercises.removeAtIndex(index)
+                        records.removeAtIndex(index)
                         let indexPath = NSIndexPath(forRow: index, inSection: 0)
                         self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
                     }
@@ -165,9 +145,9 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         }
     }
     
-    func buildIndex(records: [CKRecord]) -> [[CKRecord]] {
+    func buildIndex(records: [CKRecord]) -> [[[CKRecord]]] {
         var dates = [NSDate]()
-        var result = [[CKRecord]]()
+        var result = [[[CKRecord]]]()
         
         for record in records {
             var date = record.objectForKey("startTime") as NSDate
@@ -180,15 +160,21 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         for date in dates {
             var recordForDate = [CKRecord]()
             
-            for (index, exercise) in enumerate(exercises) {
+            for (index, exercise) in enumerate(records) {
                 let created = exercise.objectForKey("startTime") as NSDate
                 
+                    for (index, name) in enumerate(dates)
+                
                 if date == created {
-                    let record = exercises[index] as CKRecord
+                    let record = records[index] as CKRecord
                     recordForDate.append(record)
                 }
             }
             result.append(recordForDate)
+        }
+        
+        for record in dates {
+            
         }
         
         return result
@@ -197,12 +183,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
 
 extension ViewController: UITableViewDataSource {
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return days.count
+        return exercisesForDay.count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as DayCell
-        let data = days[indexPath.row]
+        let data = exercisesForDay[indexPath.row]
         
         let date = data[0].creationDate
         let dateFormatter = NSDateFormatter()
@@ -227,7 +213,7 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let detailViewController = DetailViewController()
-        detailViewController.exercisesForDay = days[indexPath.row]
+        detailViewController.exercisesForDay = exercisesByDay[indexPath.row]
         navigationController?.pushViewController(detailViewController, animated: true)
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
     }
@@ -237,7 +223,7 @@ extension ViewController: UITableViewDelegate {
     }
     
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        let item = exercises[indexPath.row]
+        let item = records[indexPath.row]
         self.removeItem(item)
     }
 }
