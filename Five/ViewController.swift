@@ -116,11 +116,17 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         }
         
 <<<<<<< HEAD
+<<<<<<< HEAD
         if !exercisesForDay.isEmpty {
             let detailViewController = DetailViewController()
             detailViewController.exercisesForDay = exercisesByDay[0]
             self.navigationController?.pushViewController(detailViewController, animated: true)
         }
+=======
+        let detailViewController = DetailViewController()
+        detailViewController.exercisesForDay = days[0]
+        self.navigationController?.pushViewController(detailViewController, animated: true)
+>>>>>>> parent of 20365e5... Moved type/name logic to view controller
 =======
         let detailViewController = DetailViewController()
         detailViewController.exercisesForDay = days[0]

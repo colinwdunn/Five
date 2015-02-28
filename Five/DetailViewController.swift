@@ -266,8 +266,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             if !contains(names, name) {
                 names.append(name)
             }
-            
-            println("Types (\(names.count)): \(names)")
         }
         
         for name in names {
@@ -282,8 +280,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
                 }
             }
             result.append(recordForName)
-            
-            println("Result \(result.count): \(result)")
         }
         
         return result
