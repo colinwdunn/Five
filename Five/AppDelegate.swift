@@ -14,26 +14,6 @@ let textColor = UIColor(red: 37/255, green: 40/255, blue: 43/255, alpha: 1)
 let lightTextColor = UIColor(red: 123/255, green: 137/255, blue: 148/255, alpha: 1)
 let accentColor = UIColor(red: 255/255, green: 92/255, blue: 51/255, alpha: 1)
 
-enum exerciseName:Int {
-    case Squat, BenchPress, Row, OverheadPress, Deadlift
-    func description() -> String {
-        switch self {
-        case .Squat:
-            return "Squat"
-        case .BenchPress:
-            return "Bench Press"
-        case Row:
-            return "Row"
-        case .OverheadPress:
-            return "Overhead Press"
-        case .Deadlift:
-            return "Deadlift"
-        default:
-            return String(self.rawValue)
-        }
-    }
-}
-
 func colorWithAlpha(color: UIColor, alpha: CGFloat) -> UIColor {
     let color = color
     var red:CGFloat!, blue:CGFloat!, green:CGFloat!
