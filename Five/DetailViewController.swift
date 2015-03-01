@@ -112,9 +112,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     override func viewWillAppear(animated: Bool) {
         exercisesForName = buildIndex(exercisesForDay)
-        println("Exercise for name (\(exercisesForName.count)): \(exercisesForName)")
         updateSelectedValues()
-        
         setWeight(weight)
         setTabNames()
     }

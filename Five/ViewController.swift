@@ -89,8 +89,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 exercises = results as! [CKRecord]
                 self.days = self.buildIndex(exercises)
 //                self.tableView.reloadData()
-//                println("Days (\(self.days.count)): \(self.days)")
-                println(exercises)
+                println("Days (\(self.days.count)): \(self.days)")
             }
         }
     }
@@ -230,12 +229,7 @@ extension ViewController: UITableViewDelegate {
         let detailViewController = DetailViewController()
         detailViewController.exercisesForDay = days[indexPath.row]
         navigationController?.pushViewController(detailViewController, animated: true)
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
     }
-    
-//    func tableView(tableView: UITableView, didDeselectRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-//        return true
-//    }
     
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         let item = exercises[indexPath.row]
