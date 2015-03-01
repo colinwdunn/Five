@@ -91,9 +91,9 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         let highlighted = NSDictionary(objects: [font, colorWithAlpha(lightTextColor, 0.5)], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
         let selected = NSDictionary(objects: [font, tintColor], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
         
-        segmentedControl.setTitleTextAttributes(normal, forState: .Normal)
-        segmentedControl.setTitleTextAttributes(highlighted, forState: .Highlighted)
-        segmentedControl.setTitleTextAttributes(selected, forState: .Selected)
+        segmentedControl.setTitleTextAttributes(normal as? [NSObject : AnyObject], forState: .Normal)
+        segmentedControl.setTitleTextAttributes(highlighted as? [NSObject : AnyObject], forState: .Highlighted)
+        segmentedControl.setTitleTextAttributes(selected as? [NSObject : AnyObject], forState: .Selected)
         segmentedControl.addTarget(self, action: "tabTouched:", forControlEvents: .ValueChanged)
 
         view.addSubview(segmentedControl)
@@ -168,14 +168,14 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     func setTabNames() {
         for i in 0...2 {
             let record = exercisesForName[i][0]
-            let int = record.objectForKey("Name") as Int
+            let int = record.objectForKey("Name") as! Int
             let string = exerciseName(rawValue: int)?.description()
             tabNames.append(string!)
         }
     }
     
     func tabTouched(sender: UISegmentedControl) {
-        weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as Int
+        weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as! Int
         setWeight(weight)
         updateSelectedValues()
     }
@@ -214,10 +214,10 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     func updateSelectedValues() {
         println(segmentedControl.selectedSegmentIndex)
         let selected = exercisesForName[segmentedControl.selectedSegmentIndex]
-        startTime = selected[0].objectForKey("startTime") as NSDate
-        name = selected[0].objectForKey("Name") as Int
-        weight = selected[0].objectForKey("Weight") as Int
-        type = selected[0].objectForKey("Type") as Int
+        startTime = selected[0].objectForKey("startTime") as! NSDate
+        name = selected[0].objectForKey("Name") as! Int
+        weight = selected[0].objectForKey("Weight") as! Int
+        type = selected[0].objectForKey("Type") as! Int
         
         println("Selected: \(exerciseName(rawValue: name)?.description()), \(weight) lbs")
     }
@@ -245,7 +245,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         var result = [[CKRecord]]()
         
         for record in records {
-            var name = record.objectForKey("Name") as Int
+            var name = record.objectForKey("Name") as! Int
             
             if !contains(names, name) {
                 names.append(name)
@@ -256,7 +256,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             var recordForName = [CKRecord]()
             
             for (index, exercise) in enumerate(exercisesForDay) {
-                let existingName = exercise.objectForKey("Name") as Int
+                let existingName = exercise.objectForKey("Name") as! Int
                 
                 if name == existingName {
                     let record = exercisesForDay[index] as CKRecord
@@ -277,7 +277,7 @@ extension DetailViewController: UITableViewDataSource {
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as RepsCell
+        let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! RepsCell
         cell.segmentedControl.addTarget(self, action: "repsSegmentChanged:", forControlEvents: .ValueChanged)
         cell.segmentedControl.tag = indexPath.row
         return cell

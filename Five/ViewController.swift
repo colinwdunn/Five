@@ -34,7 +34,7 @@ enum exerciseName:Int {
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
-    let tableView = UITableView()
+    var tableView = UITableView()
     let kCellIdentifier = "Cell"
     var days:[[CKRecord]] = [[CKRecord]]() {
         didSet {
@@ -86,10 +86,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             }
             
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                exercises = results as [CKRecord]
+                exercises = results as! [CKRecord]
                 self.days = self.buildIndex(exercises)
 //                self.tableView.reloadData()
-                println("Days (\(self.days.count)): \(self.days)")
+//                println("Days (\(self.days.count)): \(self.days)")
+                println(exercises)
             }
         }
     }
@@ -98,7 +99,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         var lastTypeIsZero = false
         
         if !exercises.isEmpty {
-            if exercises[0].objectForKey("Type") as Int == 0 {
+            if exercises[0].objectForKey("Type") as! Int == 0 {
                 lastTypeIsZero = true
             }
         }
@@ -170,7 +171,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         var result = [[CKRecord]]()
         
         for record in records {
-            var date = record.objectForKey("startTime") as NSDate
+            var date = record.objectForKey("startTime") as! NSDate
             
             if !contains(dates, date) {
                 dates.append(date)
@@ -181,7 +182,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             var recordForDate = [CKRecord]()
             
             for (index, exercise) in enumerate(exercises) {
-                let created = exercise.objectForKey("startTime") as NSDate
+                let created = exercise.objectForKey("startTime") as! NSDate
                 
                 if date == created {
                     let record = exercises[index] as CKRecord
@@ -201,7 +202,7 @@ extension ViewController: UITableViewDataSource {
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as DayCell
+        let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! DayCell
         let data = days[indexPath.row]
         
         let date = data[0].creationDate
@@ -210,13 +211,13 @@ extension ViewController: UITableViewDataSource {
         let dateString = dateFormatter.stringFromDate(date)
         cell.date.text = "\(dateString) (\(data.count))"
         
-        cell.exerciseOne.text = exerciseName(rawValue: data[0].objectForKey("Name") as Int)?.description()
-        cell.exerciseTwo.text = exerciseName(rawValue: data[1].objectForKey("Name") as Int)?.description()
-        cell.exerciseThree.text = exerciseName(rawValue: data[2].objectForKey("Name") as Int)?.description()
+        cell.exerciseOne.text = exerciseName(rawValue: data[0].objectForKey("Name") as! Int)?.description()
+        cell.exerciseTwo.text = exerciseName(rawValue: data[1].objectForKey("Name") as! Int)?.description()
+        cell.exerciseThree.text = exerciseName(rawValue: data[2].objectForKey("Name") as! Int)?.description()
         
-        cell.weightOne.text = (data[0].objectForKey("Weight") as Int).description
-        cell.weightTwo.text = (data[1].objectForKey("Weight") as Int).description
-        cell.weightThree.text = (data[2].objectForKey("Weight") as Int).description
+        cell.weightOne.text = (data[0].objectForKey("Weight") as! Int).description
+        cell.weightTwo.text = (data[1].objectForKey("Weight") as! Int).description
+        cell.weightThree.text = (data[2].objectForKey("Weight") as! Int).description
         
         return cell
     }
@@ -232,9 +233,9 @@ extension ViewController: UITableViewDelegate {
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
     }
     
-    func tableView(tableView: UITableView, didDeselectRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        return true
-    }
+//    func tableView(tableView: UITableView, didDeselectRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+//        return true
+//    }
     
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         let item = exercises[indexPath.row]
