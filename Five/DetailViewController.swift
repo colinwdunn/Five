@@ -16,7 +16,11 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     var tabNames = [String]()
     var segmentedControl:UISegmentedControl!
     let separator = UIView()
-    var weight:Int!
+    var weight:Int! {
+        didSet {
+            setWeight(weight)
+        }
+    }
     let weightButton = UIButton()
     let weightPerSideLabel = UILabel()
     
@@ -29,7 +33,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     var startTime: NSDate!
     var type: Int!
-    var sets:Int = 1
     var reps: Int!
     var name: Int!
     
@@ -43,6 +46,10 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        exercisesForName = buildIndex(exercisesForDay)
+        setTabNames()
+        createSegmentedControl()
         
         let date = exercisesForDay[0].objectForKey("startTime") as! NSDate
         let dateFormatter = NSDateFormatter()
@@ -89,14 +96,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         decreaseWeight = RoundedButton(color: accentColor, title: "-5")
         decreaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: .TouchUpInside)
         view.addSubview(decreaseWeight)
-    }
-    
-    override func viewWillAppear(animated: Bool) {
-        exercisesForName = buildIndex(exercisesForDay)
-        setTabNames()
-        createSegmentedControl()
-//        updateSelectedValues()
-        setWeight(weight)
+        
+        weight = exercisesForName[segmentedControl.selectedSegmentIndex][0].objectForKey("Weight") as! Int
     }
     
     override func viewDidLayoutSubviews() {
@@ -106,7 +107,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         decreaseWeight.frame = CGRectMake(view.frame.width - 118, view.frame.height - segmentedControl.frame.height - 64, 44, 44)
         segmentedControl.frame = CGRectMake(0, view.frame.height - 60, view.frame.width, 60)
         separator.frame = CGRectMake(20, view.frame.height - segmentedControl.frame.height - 1, view.frame.width - 40, 1)
-        tableView.frame = CGRectMake(20, 25, view.frame.width - 40, tableView.rowHeight * 6)
+        tableView.frame = CGRectMake(20, 100, view.frame.width - 40, tableView.rowHeight * 6)
     }
     
     func createSegmentedControl() {
@@ -144,13 +145,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         if weight != value {
             weight = value
             exercisesForDay[segmentedControl.selectedSegmentIndex].setObject(weight, forKey: "Weight")
-            modify()
+            modifyItem()
         }
-    }
-    
-    func weightPerSide(weight: Int) -> Float {
-        var weightPerSide = (Float(weight) - 45) / 2
-        return weightPerSide
     }
     
     func changeWeight(sender: UIButton) {
@@ -161,7 +157,12 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             changedWeight = self.weight - 5
         }
         
-        setWeight(changedWeight)
+        weight = changedWeight
+    }
+    
+    func weightPerSide(weight: Int) -> Float {
+        var weightPerSide = (Float(weight) - 45) / 2
+        return weightPerSide
     }
     
     func setTabNames() {
@@ -175,58 +176,37 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     func tabTouched(sender: UISegmentedControl) {
         weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as! Int
-        setWeight(weight)
-//        updateSelectedValues()
+        
         
         tableView.reloadData()
     }
     
-    func modify() {
-        for i in 0...2 {
-            let operation = CKModifyRecordsOperation(recordsToSave: [exercisesForDay[i]], recordIDsToDelete: nil)
-            operation.modifyRecordsCompletionBlock = { saved, deleted, error in
-                if error != nil {
-                    println("Modify Error: \(error?.localizedDescription)")
-                }
-            }
-            db.addOperation(operation)
-        }
-    }
-    
     func repsSegmentChanged(sender: UISegmentedControl) {
+        var sets = exercisesForName[segmentedControl.selectedSegmentIndex].count
+        
         println("Row: \(sender.tag), Index: \(sender.selectedSegmentIndex)")
         println("Sets \(sets)")
         
-        let selectedExerciseGroup = exercisesForName[segmentedControl.selectedSegmentIndex]
-        let modifiedExercise = selectedExerciseGroup[sender.tag]
-        modifiedExercise.setObject(sender.selectedSegmentIndex + 1, forKey: "Reps")
+        exercisesForName[segmentedControl.selectedSegmentIndex][sender.tag].setObject(sender.selectedSegmentIndex + 1, forKey: "Reps")
         
-        modify()
+        modifyItem()
         addItem()
         
         if sets < 5 && sender.tag == sets - 1 {
             sets += 1
-            let indexPath = NSIndexPath(forRow: self.sets - 1, inSection: 0)
+            let indexPath = NSIndexPath(forRow: sets - 1, inSection: 0)
             tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
         }
     }
     
-//    func updateSelectedValues() {
-//        let selected = exercisesForName[segmentedControl.selectedSegmentIndex]
-//        startTime = selected[0].objectForKey("startTime") as! NSDate
-//        name = selected[0].objectForKey("Name") as! Int
-//        weight = selected[0].objectForKey("Weight") as! Int
-//        type = selected[0].objectForKey("Type") as! Int
-//        sets = selected.count
-//        println("\(tabNames[segmentedControl.selectedSegmentIndex]), \(weight) lbs, \(exercisesForName[segmentedControl.selectedSegmentIndex].count) set(s)")
-//    }
-    
     func addItem() {
+        let selected = exercisesForName[segmentedControl.selectedSegmentIndex][0]
+        
         let record = CKRecord(recordType: "Exercise")
-        record.setObject(startTime, forKey: "startTime")
-        record.setObject(name, forKey: "Name")
-        record.setObject(weight, forKey: "Weight")
-        record.setObject(type, forKey: "Type")
+        record.setObject(selected.objectForKey("startTime") as! NSDate, forKey: "startTime")
+        record.setObject(selected.objectForKey("Name") as! Int, forKey: "Name")
+        record.setObject(selected.objectForKey("Weight") as! Int, forKey: "Weight")
+        record.setObject(selected.objectForKey("Type") as! Int, forKey: "Type")
         record.setObject(0, forKey: "Reps")
         
         db.saveRecord(record) { (record, error) -> Void in
@@ -237,6 +217,18 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 self.exercisesForName[self.segmentedControl.selectedSegmentIndex].append(record)
             }
+        }
+    }
+    
+    func modifyItem() {
+        for i in 0...2 {
+            let operation = CKModifyRecordsOperation(recordsToSave: [exercisesForDay[i]], recordIDsToDelete: nil)
+            operation.modifyRecordsCompletionBlock = { saved, deleted, error in
+                if error != nil {
+                    println("Modify Error: \(error?.localizedDescription)")
+                }
+            }
+            db.addOperation(operation)
         }
     }
     
@@ -273,7 +265,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
 extension DetailViewController: UITableViewDataSource {
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return sets
+        return exercisesForName[segmentedControl.selectedSegmentIndex].count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -281,19 +273,9 @@ extension DetailViewController: UITableViewDataSource {
         cell.segmentedControl.addTarget(self, action: "repsSegmentChanged:", forControlEvents: .ValueChanged)
         cell.segmentedControl.tag = indexPath.row
         
-        let exercise = exercisesForName[segmentedControl.selectedSegmentIndex]
-        let repsAtRow = exercise[indexPath.row].objectForKey("Reps") as! Int
-            
+        let repsAtRow = exercisesForName[segmentedControl.selectedSegmentIndex][indexPath.row].objectForKey("Reps") as! Int
         cell.segmentedControl.selectedSegmentIndex = repsAtRow - 1
         
         return cell
     }
-}
-
-extension DetailViewController: UITableViewDelegate {
-    
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        
-    }
-    
 }

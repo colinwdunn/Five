@@ -63,10 +63,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         navigationItem.setLeftBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: "loadItems"), animated: true)
         
         loadItems()
+        days = self.buildIndex(exercises)
     }
     
     override func viewWillAppear(animated: Bool) {
-        days = self.buildIndex(exercises)
+        
 
         let selection = tableView.indexPathForSelectedRow()
         if (selection != nil) {
@@ -101,7 +102,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         if !exercises.isEmpty {
             if exercises[0].objectForKey("Type") as! Int == 0 {
-                lastTypeIsZero = true
+                lastTypeIsZero = true   
             }
         }
         
@@ -114,18 +115,20 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             
             let record = CKRecord(recordType: "Exercise")
             record.setObject(startTime, forKey: "startTime")
-            record.setObject(45 * i, forKey: "Weight")
+            record.setObject(45, forKey: "Weight")
             record.setObject(0, forKey: "Reps")
             
             if lastTypeIsZero {
                 record.setObject(1, forKey: "Type")
                 record.setObject(typeOneNames[i - 1], forKey: "Name")
+                println("Created type 1")
             } else {
                 record.setObject(0, forKey: "Type")
                 record.setObject(typeZeroNames[i - 1], forKey: "Name")
+                println("Created type 0")
             }
             
-            exercises.append(record)
+            exercises.insert(record, atIndex: 0)
             
             db.saveRecord(record) { (record, error) -> Void in
                 if error != nil {
