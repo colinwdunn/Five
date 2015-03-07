@@ -36,11 +36,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     var tableView = UITableView()
     let kCellIdentifier = "Cell"
-    var days:[[CKRecord]] = [[CKRecord]]() {
-        didSet {
-            self.tableView.reloadData()
-        }
-    }
+    var days:[[CKRecord]] = [[CKRecord]]()
     
     override init() {
         super.init(nibName: nil, bundle: nil)
@@ -64,11 +60,18 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         navigationController?.navigationBar.tintColor = tintColor
         navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
         navigationItem.setRightBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "addItem"), animated: true)
+        navigationItem.setLeftBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: "loadItems"), animated: true)
+        
+        loadItems()
     }
     
     override func viewWillAppear(animated: Bool) {
         days = self.buildIndex(exercises)
-        loadItems()
+
+        let selection = tableView.indexPathForSelectedRow()
+        if (selection != nil) {
+            tableView.deselectRowAtIndexPath(selection!, animated: true)
+        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -88,8 +91,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 exercises = results as! [CKRecord]
                 self.days = self.buildIndex(exercises)
-//                self.tableView.reloadData()
-                println("Days (\(self.days.count)): \(self.days)")
+                self.tableView.reloadData()
             }
         }
     }
@@ -109,6 +111,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         let typeOneNames = [exerciseName.Squat.rawValue, exerciseName.OverheadPress.rawValue, exerciseName.Deadlift.rawValue]
         
         for i in 1...3 {
+            
             let record = CKRecord(recordType: "Exercise")
             record.setObject(startTime, forKey: "startTime")
             record.setObject(45 * i, forKey: "Weight")
@@ -117,52 +120,42 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             if lastTypeIsZero {
                 record.setObject(1, forKey: "Type")
                 record.setObject(typeOneNames[i - 1], forKey: "Name")
-                println("Created type 1")
             } else {
                 record.setObject(0, forKey: "Type")
                 record.setObject(typeZeroNames[i - 1], forKey: "Name")
-                println("Creatd type 0")
             }
+            
+            exercises.append(record)
             
             db.saveRecord(record) { (record, error) -> Void in
                 if error != nil {
                     println(error.localizedDescription)
                 }
-                
-                dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                    exercises.append(record)
-                    self.buildIndex(exercises)
-                    
-                    let indexPath = NSIndexPath(forRow: self.days.count - 1, inSection: 0)
-                    self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
-                }
             }
         }
         
-        if !days.isEmpty {
-            let detailViewController = DetailViewController()
-            detailViewController.exercisesForDay = days[0]
-            self.navigationController?.pushViewController(detailViewController, animated: true)
-        }
+        self.days = self.buildIndex(exercises)
+        self.tableView.insertRowsAtIndexPaths([NSIndexPath(forRow: 0, inSection: 0)], withRowAnimation: .Automatic)
     }
     
-    func removeItem(item: CKRecord) {
-        db.deleteRecordWithID(item.recordID) { (record, error) -> Void in
-            if error != nil {
-                println(error.localizedDescription)
-            }
-            
-            dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                if let index = find(exercises, item) {
-                    
-                    for i in 1...3 {
+    func removeItems(items: [CKRecord], indexPath: NSIndexPath) {
+        
+        for item in items {
+            db.deleteRecordWithID(item.recordID) { (record, error) -> Void in
+                if error != nil {
+                    println(error.localizedDescription)
+                }
+                
+                dispatch_async(dispatch_get_main_queue()) { () -> Void in
+                    if let index = find(exercises, item) {
                         exercises.removeAtIndex(index)
-                        let indexPath = NSIndexPath(forRow: index, inSection: 0)
-                        self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
                     }
                 }
             }
         }
+        
+        self.days.removeAtIndex(indexPath.row)
+        tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
     }
     
     func buildIndex(records: [CKRecord]) -> [[CKRecord]] {
@@ -204,7 +197,7 @@ extension ViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! DayCell
         let data = days[indexPath.row]
         
-        let date = data[0].creationDate
+        let date = data[0].objectForKey("startTime") as! NSDate
         let dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "EEEE, MMM d"
         let dateString = dateFormatter.stringFromDate(date)
@@ -232,7 +225,7 @@ extension ViewController: UITableViewDelegate {
     }
     
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        let item = exercises[indexPath.row]
-        self.removeItem(item)
+        let items = days[indexPath.row]
+        self.removeItems(items, indexPath: indexPath)
     }
 }

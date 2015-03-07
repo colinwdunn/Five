@@ -44,7 +44,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let date = exercisesForDay[0].creationDate
+        let date = exercisesForDay[0].objectForKey("startTime") as! NSDate
         let dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "EEEE, MMM d"
         
@@ -79,25 +79,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         weightPerSideLabel.textColor = lightTextColor
         view.addSubview(weightPerSideLabel)
         
-        segmentedControl = UISegmentedControl(items: tabNames)
-        println("segmentedControl value changed")
-        segmentedControl.selectedSegmentIndex = 0
-        segmentedControl.tintColor = UIColor.clearColor()
-        
-        let fontAttributes = NSDictionary(object: UIFont.systemFontOfSize(16), forKey: NSFontAttributeName)
-        let colorAttributes = NSDictionary(object: lightTextColor, forKey: NSForegroundColorAttributeName)
-        let font = UIFont.systemFontOfSize(16)
-        let normal = NSDictionary(objects: [font, lightTextColor], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
-        let highlighted = NSDictionary(objects: [font, colorWithAlpha(lightTextColor, 0.5)], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
-        let selected = NSDictionary(objects: [font, tintColor], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
-        
-        segmentedControl.setTitleTextAttributes(normal as? [NSObject : AnyObject], forState: .Normal)
-        segmentedControl.setTitleTextAttributes(highlighted as? [NSObject : AnyObject], forState: .Highlighted)
-        segmentedControl.setTitleTextAttributes(selected as? [NSObject : AnyObject], forState: .Selected)
-        segmentedControl.addTarget(self, action: "tabTouched:", forControlEvents: .ValueChanged)
-
-        view.addSubview(segmentedControl)
-        
         separator.backgroundColor = colorWithAlpha(lightTextColor, 0.25)
         view.addSubview(separator)
         
@@ -112,9 +93,10 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     override func viewWillAppear(animated: Bool) {
         exercisesForName = buildIndex(exercisesForDay)
-        updateSelectedValues()
-        setWeight(weight)
         setTabNames()
+        createSegmentedControl()
+//        updateSelectedValues()
+        setWeight(weight)
     }
     
     override func viewDidLayoutSubviews() {
@@ -127,9 +109,28 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         tableView.frame = CGRectMake(20, 25, view.frame.width - 40, tableView.rowHeight * 6)
     }
     
+    func createSegmentedControl() {
+        segmentedControl = UISegmentedControl(items: tabNames)
+        segmentedControl.tintColor = UIColor.clearColor()
+        
+        let fontAttributes = NSDictionary(object: UIFont.systemFontOfSize(16), forKey: NSFontAttributeName)
+        let colorAttributes = NSDictionary(object: lightTextColor, forKey: NSForegroundColorAttributeName)
+        let font = UIFont.systemFontOfSize(16)
+        let normal = NSDictionary(objects: [font, lightTextColor], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
+        let highlighted = NSDictionary(objects: [font, colorWithAlpha(lightTextColor, 0.5)], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
+        let selected = NSDictionary(objects: [font, tintColor], forKeys: [NSFontAttributeName, NSForegroundColorAttributeName])
+        
+        segmentedControl.setTitleTextAttributes(normal as? [NSObject : AnyObject], forState: .Normal)
+        segmentedControl.setTitleTextAttributes(highlighted as? [NSObject : AnyObject], forState: .Highlighted)
+        segmentedControl.setTitleTextAttributes(selected as? [NSObject : AnyObject], forState: .Selected)
+        segmentedControl.addTarget(self, action: "tabTouched:", forControlEvents: .ValueChanged)
+        segmentedControl.selectedSegmentIndex = 0
+        
+        view.addSubview(segmentedControl)
+    }
+    
     func presentWeightKeyboard() {
         let weightKeyboard = WeightKeyboardViewController()
-        println("Weight: \(weight)")
         weightKeyboard.weight = weight
         weightKeyboard.delegate = self
         self.presentViewController(weightKeyboard, animated: true) { () -> Void in
@@ -175,7 +176,9 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     func tabTouched(sender: UISegmentedControl) {
         weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as! Int
         setWeight(weight)
-        updateSelectedValues()
+//        updateSelectedValues()
+        
+        tableView.reloadData()
     }
     
     func modify() {
@@ -193,7 +196,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     func repsSegmentChanged(sender: UISegmentedControl) {
         println("Row: \(sender.tag), Index: \(sender.selectedSegmentIndex)")
         println("Sets \(sets)")
-        println("Current exercise: \(exercisesForName[segmentedControl.selectedSegmentIndex])")
         
         let selectedExerciseGroup = exercisesForName[segmentedControl.selectedSegmentIndex]
         let modifiedExercise = selectedExerciseGroup[sender.tag]
@@ -209,16 +211,15 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         }
     }
     
-    func updateSelectedValues() {
-        println(segmentedControl.selectedSegmentIndex)
-        let selected = exercisesForName[segmentedControl.selectedSegmentIndex]
-        startTime = selected[0].objectForKey("startTime") as! NSDate
-        name = selected[0].objectForKey("Name") as! Int
-        weight = selected[0].objectForKey("Weight") as! Int
-        type = selected[0].objectForKey("Type") as! Int
-        
-        println("Selected: \(exerciseName(rawValue: name)?.description()), \(weight) lbs")
-    }
+//    func updateSelectedValues() {
+//        let selected = exercisesForName[segmentedControl.selectedSegmentIndex]
+//        startTime = selected[0].objectForKey("startTime") as! NSDate
+//        name = selected[0].objectForKey("Name") as! Int
+//        weight = selected[0].objectForKey("Weight") as! Int
+//        type = selected[0].objectForKey("Type") as! Int
+//        sets = selected.count
+//        println("\(tabNames[segmentedControl.selectedSegmentIndex]), \(weight) lbs, \(exercisesForName[segmentedControl.selectedSegmentIndex].count) set(s)")
+//    }
     
     func addItem() {
         let record = CKRecord(recordType: "Exercise")
@@ -226,6 +227,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         record.setObject(name, forKey: "Name")
         record.setObject(weight, forKey: "Weight")
         record.setObject(type, forKey: "Type")
+        record.setObject(0, forKey: "Reps")
         
         db.saveRecord(record) { (record, error) -> Void in
             if error != nil {
@@ -253,7 +255,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         for name in names {
             var recordForName = [CKRecord]()
             
-            for (index, exercise) in enumerate(exercisesForDay) {
+            for (index, exercise) in    enumerate(exercisesForDay) {
                 let existingName = exercise.objectForKey("Name") as! Int
                 
                 if name == existingName {
@@ -278,6 +280,12 @@ extension DetailViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! RepsCell
         cell.segmentedControl.addTarget(self, action: "repsSegmentChanged:", forControlEvents: .ValueChanged)
         cell.segmentedControl.tag = indexPath.row
+        
+        let exercise = exercisesForName[segmentedControl.selectedSegmentIndex]
+        let repsAtRow = exercise[indexPath.row].objectForKey("Reps") as! Int
+            
+        cell.segmentedControl.selectedSegmentIndex = repsAtRow - 1
+        
         return cell
     }
 }
