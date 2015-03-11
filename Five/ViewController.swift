@@ -220,7 +220,7 @@ extension ViewController: UITableViewDataSource {
         
         let date = data[0][0].objectForKey("startTime") as! NSDate
         let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "EEEE, MMM d"
+        dateFormatter.dateFormat = "EEEE, MMMM d"
         cell.date.text = dateFormatter.stringFromDate(date)
         
         for (index, row) in enumerate(cell.rows) {

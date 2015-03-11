@@ -17,13 +17,8 @@ class RepsCell: UITableViewCell {
     var selectedSegments:Int! {
         didSet {
             UIView.animateWithDuration(0.25, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.8, options: nil, animations: { () -> Void in
-                println(self.contentView.frame.width)
                 self.bar.frame.size.width = (self.contentView.frame.width / 5) * CGFloat(self.selectedSegments)
                 self.bar.alpha = CGFloat(self.selectedSegments) * 0.2
-                
-                if self.selectedSegments > 0 {
-                    self.segmentedControl.backgroundColor = UIColor.clearColor()
-                }
             }, completion: nil)
         }
     }
@@ -36,10 +31,10 @@ class RepsCell: UITableViewCell {
         
         bar.backgroundColor = tintColor
         bar.frame = CGRectMake(0, 0, 0, contentView.frame.height)
-//        contentView.addSubview(bar)
+        contentView.addSubview(bar)
         
         segmentedControl = UISegmentedControl(items: segments)
-//        segmentedControl.tintColor = UIColor.clearColor()
+        segmentedControl.tintColor = UIColor.clearColor()
         segmentedControl.backgroundColor = colorWithAlpha(lightTextColor, 0.25)
         segmentedControl.addTarget(self, action: "segmentChanged:", forControlEvents: .ValueChanged)
         contentView.addSubview(segmentedControl)

@@ -25,11 +25,7 @@ class ExerciseCellRow: UIView {
         }
     }
     
-    var reps:[Int]! = [Int]() {
-        didSet {
-            println(reps)
-        }
-    }
+    var reps:[Int]!
 
     override init() {
         super.init(frame: CGRect())
@@ -58,6 +54,8 @@ class ExerciseCellRow: UIView {
             sparkRow.alpha = CGFloat(rep) * 0.2
             addSubview(sparkRow)
         }
+        
+        println("Reps: \(reps)")
     }
 
 }

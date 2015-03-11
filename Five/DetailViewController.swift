@@ -51,7 +51,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         
         let date = data[0][0].objectForKey("startTime") as! NSDate
         let dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "EEEE, MMM d"
+        dateFormatter.dateFormat = "EEEE, MMMM d"
         
         navigationItem.title = dateFormatter.stringFromDate(date)
         
@@ -196,7 +196,9 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         
         if sender.tag + 1 == data[segmentedControl.selectedSegmentIndex].count && data[segmentedControl.selectedSegmentIndex].count < 5 {
             addItem()
-            self.tableView.insertRowsAtIndexPaths([NSIndexPath(forRow: self.data[self.segmentedControl.selectedSegmentIndex].count - 1, inSection: 0)], withRowAnimation: .Fade)
+            let cell = self.tableView.cellForRowAtIndexPath(NSIndexPath(forRow: self.data[self.segmentedControl.selectedSegmentIndex].count - 1, inSection: 0)) as! RepsCell
+            cell.segmentedControl.enabled = true
+//            self.tableView.insertRowsAtIndexPaths([NSIndexPath(forRow: self.data[self.segmentedControl.selectedSegmentIndex].count - 1, inSection: 0)], withRowAnimation: .Fade)
         }
     }
     
@@ -218,6 +220,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             }
             
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
+                println("Row added")
             }
         }
     }
@@ -229,7 +232,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         let operation = CKModifyRecordsOperation(recordsToSave: record, recordIDsToDelete: nil)
         operation.modifyRecordsCompletionBlock = { saved, deleted, error in
             if error != nil {
-                println((error.localizedDescription))
+                println(error.localizedDescription)
             }
         }
         db.addOperation(operation)
@@ -239,7 +242,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
 extension DetailViewController: UITableViewDataSource {
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data[segmentedControl.selectedSegmentIndex].count
+        return 5
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -247,9 +250,15 @@ extension DetailViewController: UITableViewDataSource {
         cell.segmentedControl.addTarget(self, action: "repsSegmentChanged:", forControlEvents: .ValueChanged)
         cell.segmentedControl.tag = indexPath.row
         
-        let repsAtRow = data[segmentedControl.selectedSegmentIndex][indexPath.row].objectForKey("Reps") as! Int
-        cell.segmentedControl.selectedSegmentIndex = repsAtRow - 1
-        cell.selectedSegments = repsAtRow
+        if indexPath.row < data[segmentedControl.selectedSegmentIndex].count {
+            let repsAtRow = data[segmentedControl.selectedSegmentIndex][indexPath.row].objectForKey("Reps") as! Int
+            cell.segmentedControl.selectedSegmentIndex = repsAtRow - 1
+            cell.selectedSegments = repsAtRow
+        } else {
+            cell.segmentedControl.selectedSegmentIndex = -1
+            cell.selectedSegments = 0
+            cell.segmentedControl.enabled = false
+        }
         
         return cell
     }
