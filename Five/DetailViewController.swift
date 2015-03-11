@@ -11,8 +11,7 @@ import CloudKit
 
 class DetailViewController: UIViewController, weightKeyboardDelegate, UITableViewDelegate, UITableViewDataSource {
     
-    var exercisesForDay = [CKRecord]()
-    var exercisesForName = [[CKRecord]]()
+    var data = [[CKRecord]]()
     var tabNames = [String]()
     var segmentedControl:UISegmentedControl!
     let separator = UIView()
@@ -47,11 +46,10 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        exercisesForName = buildIndex(exercisesForDay)
         setTabNames()
         createSegmentedControl()
         
-        let date = exercisesForDay[0].objectForKey("startTime") as! NSDate
+        let date = data[0][0].objectForKey("startTime") as! NSDate
         let dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "EEEE, MMM d"
         
@@ -97,7 +95,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         decreaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: .TouchUpInside)
         view.addSubview(decreaseWeight)
         
-        weight = exercisesForName[segmentedControl.selectedSegmentIndex][0].objectForKey("Weight") as! Int
+        weight = data[segmentedControl.selectedSegmentIndex][0].objectForKey("Weight") as! Int
     }
     
     override func viewDidLayoutSubviews() {
@@ -144,8 +142,13 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         
         if weight != value {
             weight = value
-            exercisesForDay[segmentedControl.selectedSegmentIndex].setObject(weight, forKey: "Weight")
-            modifyItem()
+            data[segmentedControl.selectedSegmentIndex][0].setObject(weight, forKey: "Weight")
+            modifyItem(0)
+            
+//            for (i, record) in enumerate(data[segmentedControl.selectedSegmentIndex]) {
+//                record.setObject(weight, forKey: "Weight")
+//                modifyItem(i)
+//            }
         }
     }
     
@@ -167,7 +170,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     func setTabNames() {
         for i in 0...2 {
-            let record = exercisesForName[i][0]
+            let record = data[i][0]
             let int = record.objectForKey("Name") as! Int
             let string = exerciseName(rawValue: int)?.description()
             tabNames.append(string!)
@@ -175,32 +178,30 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     }
     
     func tabTouched(sender: UISegmentedControl) {
-        weight = exercisesForDay[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as! Int
-        
-        
+        weight = data[segmentedControl.selectedSegmentIndex][0].objectForKey("Weight") as! Int
         tableView.reloadData()
     }
     
     func repsSegmentChanged(sender: UISegmentedControl) {
-        var sets = exercisesForName[segmentedControl.selectedSegmentIndex].count
+        let sets = data[segmentedControl.selectedSegmentIndex].count
+        let selected = data[segmentedControl.selectedSegmentIndex][0]
+        let set = data[segmentedControl.selectedSegmentIndex][sender.tag].objectForKey("Set") as! Int
         
-        println("Row: \(sender.tag), Index: \(sender.selectedSegmentIndex)")
-        println("Sets \(sets)")
+//        println("Sender: \(sender.tag)")
+        let modifiedRecord = data[segmentedControl.selectedSegmentIndex][sender.tag]
+//        let modifiedRecordID = modifiedRecord.objectForKey("recordID") as! CKRecordID
+//        println("ID: \(modifiedRecordID)")
+        modifiedRecord.setObject(sender.selectedSegmentIndex + 1, forKey: "Reps")
+        modifyItem(sender.tag)
         
-        exercisesForName[segmentedControl.selectedSegmentIndex][sender.tag].setObject(sender.selectedSegmentIndex + 1, forKey: "Reps")
-        
-        modifyItem()
-        addItem()
-        
-        if sets < 5 && sender.tag == sets - 1 {
-            sets += 1
-            let indexPath = NSIndexPath(forRow: sets - 1, inSection: 0)
-            tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
+        if sender.tag + 1 == data[segmentedControl.selectedSegmentIndex].count && data[segmentedControl.selectedSegmentIndex].count < 5 {
+            addItem()
+            self.tableView.insertRowsAtIndexPaths([NSIndexPath(forRow: self.data[self.segmentedControl.selectedSegmentIndex].count - 1, inSection: 0)], withRowAnimation: .Fade)
         }
     }
     
     func addItem() {
-        let selected = exercisesForName[segmentedControl.selectedSegmentIndex][0]
+        let selected = data[segmentedControl.selectedSegmentIndex][0]
         
         let record = CKRecord(recordType: "Exercise")
         record.setObject(selected.objectForKey("startTime") as! NSDate, forKey: "startTime")
@@ -208,6 +209,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         record.setObject(selected.objectForKey("Weight") as! Int, forKey: "Weight")
         record.setObject(selected.objectForKey("Type") as! Int, forKey: "Type")
         record.setObject(0, forKey: "Reps")
+        record.setObject(data[segmentedControl.selectedSegmentIndex].count + 1, forKey: "Set")
+        self.data[self.segmentedControl.selectedSegmentIndex].append(record)
         
         db.saveRecord(record) { (record, error) -> Void in
             if error != nil {
@@ -215,57 +218,28 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             }
             
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                self.exercisesForName[self.segmentedControl.selectedSegmentIndex].append(record)
             }
         }
     }
     
-    func modifyItem() {
-        for i in 0...2 {
-            let operation = CKModifyRecordsOperation(recordsToSave: [exercisesForDay[i]], recordIDsToDelete: nil)
-            operation.modifyRecordsCompletionBlock = { saved, deleted, error in
-                if error != nil {
-                    println("Modify Error: \(error?.localizedDescription)")
-                }
-            }
-            db.addOperation(operation)
-        }
-    }
-    
-    func buildIndex(records: [CKRecord]) -> [[CKRecord]] {
-        var names = [Int]()
-        var result = [[CKRecord]]()
+    func modifyItem(index: Int) {
+        let date = data[segmentedControl.selectedSegmentIndex][index].objectForKey("creationDate") as! NSDate
+        let record = exercises.filter { ($0.objectForKey("creationDate") as! NSDate == date) }
         
-        for record in records {
-            var name = record.objectForKey("Name") as! Int
-            
-            if !contains(names, name) {
-                names.append(name)
+        let operation = CKModifyRecordsOperation(recordsToSave: record, recordIDsToDelete: nil)
+        operation.modifyRecordsCompletionBlock = { saved, deleted, error in
+            if error != nil {
+                println((error.localizedDescription))
             }
         }
-        
-        for name in names {
-            var recordForName = [CKRecord]()
-            
-            for (index, exercise) in    enumerate(exercisesForDay) {
-                let existingName = exercise.objectForKey("Name") as! Int
-                
-                if name == existingName {
-                    let record = exercisesForDay[index] as CKRecord
-                    recordForName.append(record)
-                }
-            }
-            result.append(recordForName)
-        }
-        
-        return result
+        db.addOperation(operation)
     }
 }
 
 extension DetailViewController: UITableViewDataSource {
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return exercisesForName[segmentedControl.selectedSegmentIndex].count
+        return data[segmentedControl.selectedSegmentIndex].count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -273,8 +247,9 @@ extension DetailViewController: UITableViewDataSource {
         cell.segmentedControl.addTarget(self, action: "repsSegmentChanged:", forControlEvents: .ValueChanged)
         cell.segmentedControl.tag = indexPath.row
         
-        let repsAtRow = exercisesForName[segmentedControl.selectedSegmentIndex][indexPath.row].objectForKey("Reps") as! Int
+        let repsAtRow = data[segmentedControl.selectedSegmentIndex][indexPath.row].objectForKey("Reps") as! Int
         cell.segmentedControl.selectedSegmentIndex = repsAtRow - 1
+        cell.selectedSegments = repsAtRow
         
         return cell
     }
