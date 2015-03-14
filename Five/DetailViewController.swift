@@ -136,20 +136,22 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         }
     }
     
-    func setWeight(value: Int) {
-        weightButton.setTitle(value.description, forState: .Normal)
-        weightPerSideLabel.text = Float(weightPerSide(value)).formatted
+    func setWeight(newWeight: Int) {
+        let currentWeight = data[segmentedControl.selectedSegmentIndex][0].objectForKey("Weight") as! Int
         
-        if weight != value {
-            weight = value
-            data[segmentedControl.selectedSegmentIndex][0].setObject(weight, forKey: "Weight")
-            modifyItem(0)
-            
-//            for (i, record) in enumerate(data[segmentedControl.selectedSegmentIndex]) {
-//                record.setObject(weight, forKey: "Weight")
-//                modifyItem(i)
-//            }
+        if weight != newWeight {
+            weight = newWeight
         }
+        
+        if newWeight != currentWeight {
+            for (index, records) in enumerate(data[segmentedControl.selectedSegmentIndex]) {
+                data[segmentedControl.selectedSegmentIndex][index].setObject(newWeight, forKey: "Weight")
+                modifyItem(index)
+            }
+        }
+        
+        weightButton.setTitle("\(newWeight.description)", forState: .Normal)
+        weightPerSideLabel.text = Float(weightPerSide(newWeight)).formatted
     }
     
     func changeWeight(sender: UIButton) {
@@ -184,13 +186,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     func repsSegmentChanged(sender: UISegmentedControl) {
         let sets = data[segmentedControl.selectedSegmentIndex].count
-        let selected = data[segmentedControl.selectedSegmentIndex][0]
         let set = data[segmentedControl.selectedSegmentIndex][sender.tag].objectForKey("Set") as! Int
-        
-//        println("Sender: \(sender.tag)")
         let modifiedRecord = data[segmentedControl.selectedSegmentIndex][sender.tag]
-//        let modifiedRecordID = modifiedRecord.objectForKey("recordID") as! CKRecordID
-//        println("ID: \(modifiedRecordID)")
         modifiedRecord.setObject(sender.selectedSegmentIndex + 1, forKey: "Reps")
         modifyItem(sender.tag)
         
@@ -198,7 +195,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             addItem()
             let cell = self.tableView.cellForRowAtIndexPath(NSIndexPath(forRow: self.data[self.segmentedControl.selectedSegmentIndex].count - 1, inSection: 0)) as! RepsCell
             cell.segmentedControl.enabled = true
-//            self.tableView.insertRowsAtIndexPaths([NSIndexPath(forRow: self.data[self.segmentedControl.selectedSegmentIndex].count - 1, inSection: 0)], withRowAnimation: .Fade)
         }
     }
     

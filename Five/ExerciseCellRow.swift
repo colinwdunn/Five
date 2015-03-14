@@ -25,7 +25,19 @@ class ExerciseCellRow: UIView {
         }
     }
     
-    var reps:[Int]!
+    var reps:[Int]! {
+        didSet {
+            for (index, view) in enumerate(reps) {
+                if reps[index] > 0 {
+                    sparkViews[index].frame.size.width = 4 * CGFloat(reps[index])
+                    sparkViews[index].alpha = CGFloat(reps[index]) * 0.2
+                    sparkViews[index].backgroundColor = tintColor
+                }
+            }
+        }
+    }
+    
+    var sparkViews = [UIView]()
 
     override init() {
         super.init(frame: CGRect())
@@ -35,6 +47,15 @@ class ExerciseCellRow: UIView {
         weightLabel.textColor = lightTextColor
         addSubview(nameLabel)
         addSubview(weightLabel)
+        
+        for i in 1...5 {
+            let sparkView = UIView()
+            sparkView.frame = CGRectMake(0, CGFloat(i) * 4, 20, 3)
+            sparkView.backgroundColor = lightTextColor
+            sparkView.alpha = 0.2
+            sparkViews.append(sparkView)
+            addSubview(sparkView)
+        }
     }
 
     required init(coder aDecoder: NSCoder) {
@@ -47,15 +68,9 @@ class ExerciseCellRow: UIView {
         nameLabel.frame = CGRectMake(0, 0, frame.width / 2, 30)
         weightLabel.frame = CGRectMake(frame.width / 2, 0, frame.width / 2, 30)
         
-        for (i, rep) in enumerate(reps) {
-            let sparkRow = UIView()
-            sparkRow.frame = CGRectMake(frame.width - 60, 4 * CGFloat(i), 5 * CGFloat(rep), 3)
-            sparkRow.backgroundColor = tintColor
-            sparkRow.alpha = CGFloat(rep) * 0.2
-            addSubview(sparkRow)
+        for view in sparkViews {
+            view.frame.origin.x = frame.width - 60
         }
-        
-        println("Reps: \(reps)")
     }
 
 }
