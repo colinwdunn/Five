@@ -26,17 +26,16 @@ class RepsCell: UITableViewCell {
     override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        
         contentView.backgroundColor = UIColor.clearColor()
         
+        bar.frame = CGRectZero
         bar.backgroundColor = tintColor
-        bar.frame = CGRectMake(0, 0, 0, contentView.frame.height)
         contentView.addSubview(bar)
         
         segmentedControl = UISegmentedControl(items: segments)
         segmentedControl.tintColor = UIColor.clearColor()
-        segmentedControl.backgroundColor = colorWithAlpha(lightTextColor, 0.25)
         segmentedControl.addTarget(self, action: "segmentChanged:", forControlEvents: .ValueChanged)
+        segmentedControl.backgroundColor = colorWithAlpha(tintColor, 0.1)
         contentView.addSubview(segmentedControl)
     }
     
@@ -47,6 +46,8 @@ class RepsCell: UITableViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         segmentedControl.frame = CGRectMake(0, 0, contentView.frame.width, contentView.frame.height - padding)
+        bar.frame.size.width = contentView.frame.width / 5 * CGFloat(selectedSegments)
+        bar.frame.size.height = contentView.frame.height - padding
     }
     
     required init(coder aDecoder: NSCoder) {

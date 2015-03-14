@@ -60,7 +60,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         navigationController?.navigationBar.tintColor = tintColor
         navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
         navigationItem.setRightBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "addItem"), animated: true)
-        navigationItem.setLeftBarButtonItem(UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: "loadItems"), animated: true)
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -110,27 +109,28 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         var day = [CKRecord]()
         
         for i in 1...3 {
-            
-            let record = CKRecord(recordType: "Exercise")
-            record.setObject(startTime, forKey: "startTime")
-            record.setObject(45, forKey: "Weight")
-            record.setObject(0, forKey: "Reps")
-            record.setObject(1, forKey: "Set")
-            
-            if lastTypeIsZero {
-                record.setObject(1, forKey: "Type")
-                record.setObject(typeOneNames[i - 1], forKey: "Name")
-            } else {
-                record.setObject(0, forKey: "Type")
-                record.setObject(typeZeroNames[i - 1], forKey: "Name")
-            }
-            
-            exercises.insert(record, atIndex: 0)
-            day.append(record)
-            
-            db.saveRecord(record) { (record, error) -> Void in
-                if error != nil {
-                    println(error.localizedDescription)
+            for set in 1...5 {
+                let record = CKRecord(recordType: "Exercise")
+                record.setObject(startTime, forKey: "startTime")
+                record.setObject(45, forKey: "Weight")
+                record.setObject(0, forKey: "Reps")
+                record.setObject(set, forKey: "Set")
+                
+                if lastTypeIsZero {
+                    record.setObject(1, forKey: "Type")
+                    record.setObject(typeOneNames[i - 1], forKey: "Name")
+                } else {
+                    record.setObject(0, forKey: "Type")
+                    record.setObject(typeZeroNames[i - 1], forKey: "Name")
+                }
+                
+                exercises.insert(record, atIndex: 0)
+                day.append(record)
+                
+                db.saveRecord(record) { (record, error) -> Void in
+                    if error != nil {
+                        println(error.localizedDescription)
+                    }
                 }
             }
         }
@@ -157,6 +157,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         days.removeAtIndex(indexPath.row)
         tableView.cellForRowAtIndexPath(indexPath)?.setEditing(false, animated: false)
         tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+        println(days)
     }
     
     func uniqueDays(records: [CKRecord]) -> [[CKRecord]] {
@@ -233,7 +234,6 @@ extension ViewController: UITableViewDataSource {
                 row.reps.append(rep)
             }
         }
-        
         return cell
     }
 }

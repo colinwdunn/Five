@@ -190,40 +190,16 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         let modifiedRecord = data[segmentedControl.selectedSegmentIndex][sender.tag]
         modifiedRecord.setObject(sender.selectedSegmentIndex + 1, forKey: "Reps")
         modifyItem(sender.tag)
-        
-        if sender.tag + 1 == data[segmentedControl.selectedSegmentIndex].count && data[segmentedControl.selectedSegmentIndex].count < 5 {
-            addItem()
-            let cell = self.tableView.cellForRowAtIndexPath(NSIndexPath(forRow: self.data[self.segmentedControl.selectedSegmentIndex].count - 1, inSection: 0)) as! RepsCell
-            cell.segmentedControl.enabled = true
-        }
-    }
-    
-    func addItem() {
-        let selected = data[segmentedControl.selectedSegmentIndex][0]
-        
-        let record = CKRecord(recordType: "Exercise")
-        record.setObject(selected.objectForKey("startTime") as! NSDate, forKey: "startTime")
-        record.setObject(selected.objectForKey("Name") as! Int, forKey: "Name")
-        record.setObject(selected.objectForKey("Weight") as! Int, forKey: "Weight")
-        record.setObject(selected.objectForKey("Type") as! Int, forKey: "Type")
-        record.setObject(0, forKey: "Reps")
-        record.setObject(data[segmentedControl.selectedSegmentIndex].count + 1, forKey: "Set")
-        self.data[self.segmentedControl.selectedSegmentIndex].append(record)
-        
-        db.saveRecord(record) { (record, error) -> Void in
-            if error != nil {
-                println(error.localizedDescription)
-            }
-            
-            dispatch_async(dispatch_get_main_queue()) { () -> Void in
-                println("Row added")
-            }
-        }
     }
     
     func modifyItem(index: Int) {
         let date = data[segmentedControl.selectedSegmentIndex][index].objectForKey("creationDate") as! NSDate
         let record = exercises.filter { ($0.objectForKey("creationDate") as! NSDate == date) }
+        
+        if index < data[segmentedControl.selectedSegmentIndex].count - 1 {
+            let nextCell = self.tableView.cellForRowAtIndexPath(NSIndexPath(forRow: index + 1, inSection: 0)) as! RepsCell
+            nextCell.segmentedControl.enabled = true
+        }
         
         let operation = CKModifyRecordsOperation(recordsToSave: record, recordIDsToDelete: nil)
         operation.modifyRecordsCompletionBlock = { saved, deleted, error in
@@ -245,15 +221,19 @@ extension DetailViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! RepsCell
         cell.segmentedControl.addTarget(self, action: "repsSegmentChanged:", forControlEvents: .ValueChanged)
         cell.segmentedControl.tag = indexPath.row
+        let cellReps = data[segmentedControl.selectedSegmentIndex][indexPath.row].objectForKey("Reps") as! Int
+        cell.segmentedControl.selectedSegmentIndex = cellReps - 1
+        cell.selectedSegments = cellReps
+        println("Row: \(indexPath.row), Reps: \(cellReps)")
         
-        if indexPath.row < data[segmentedControl.selectedSegmentIndex].count {
-            let repsAtRow = data[segmentedControl.selectedSegmentIndex][indexPath.row].objectForKey("Reps") as! Int
-            cell.segmentedControl.selectedSegmentIndex = repsAtRow - 1
-            cell.selectedSegments = repsAtRow
-        } else {
-            cell.segmentedControl.selectedSegmentIndex = -1
-            cell.selectedSegments = 0
-            cell.segmentedControl.enabled = false
+        
+        if indexPath.row != 0 {
+            if cell.segmentedControl.selectedSegmentIndex == -1 {
+                let previousCellReps = data[segmentedControl.selectedSegmentIndex][indexPath.row - 1].objectForKey("Reps") as! Int
+                if previousCellReps == 0 {
+                    cell.segmentedControl.enabled = false
+                }
+            }
         }
         
         return cell
