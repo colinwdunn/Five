@@ -14,7 +14,7 @@ import UIKit
 }
 
 class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate {
-    
+    let animator = MenuAnimator()
     let background = UIView()
     let cancel = UIButton()
     let topTitle = UILabel()
@@ -24,11 +24,14 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
     var weight:Int!
     let picker = UIPickerView()
     var pickerData = [Int]()
+    var lbsLabel = UILabel()
     
     var delegate: weightKeyboardDelegate?
     
     override init() {
         super.init(nibName: nil, bundle: nil)
+        transitioningDelegate = animator
+        modalPresentationStyle = .Custom
         picker.delegate = self
         picker.dataSource = self
     }
@@ -44,7 +47,6 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
             pickerData.append(index)
         }
         
-        println("Weight \(weight)")
         picker.selectRow((weight - 45) / 5, inComponent: 0, animated: false)
         
         background.backgroundColor = UIColor.whiteColor()
@@ -77,7 +79,13 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
         
         weightPerSideLabel.textColor = lightTextColor
         weightPerSideLabel.textAlignment = .Right
+        weightPerSideLabel.font = UIFont.systemFontOfSize(14)
         background.addSubview(weightPerSideLabel)
+        
+        lbsLabel.textColor = textColor
+        lbsLabel.text = "lbs"
+        lbsLabel.font = UIFont.systemFontOfSize(20)
+        background.addSubview(lbsLabel)
         
         setWeightPerSideLabel()
     }
@@ -88,7 +96,8 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
         done.frame = CGRectMake(view.frame.size.width - 115, 0, 100, 45)
         divider.frame = CGRectMake(0, 45, view.frame.size.width, 1)
         picker.frame = CGRectMake(0, 45, view.frame.size.width, 180)
-        weightPerSideLabel.frame = CGRectMake(self.view.frame.size.width / 2 - 150, 120, 100, 30)
+        weightPerSideLabel.frame = CGRectMake(0, 120, view.frame.width / 2 - 50, 30)
+        lbsLabel.frame = CGRectMake(view.frame.width / 2 + 28, 121, view.frame.width / 2 + 50, 30)
     }
     
     func dismiss() {
@@ -121,7 +130,7 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
     func setWeightPerSideLabel() {
         let weight = (pickerData[picker.selectedRowInComponent(0)].description).toInt()
         var weightPerSide = delegate?.weightPerSide!(weight!).formatted
-        weightPerSideLabel.text = weightPerSide
+        weightPerSideLabel.text = String("\(weightPerSide!) lbs per side")
     }
 
 }

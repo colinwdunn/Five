@@ -21,7 +21,7 @@ class ExerciseCellRow: UIView {
     
     var weight:Int! {
         didSet {
-            weightLabel.text = weight.description
+            weightLabel.text = String("\(weight.description) lbs")
         }
     }
     
@@ -51,7 +51,7 @@ class ExerciseCellRow: UIView {
         for i in 1...5 {
             let sparkView = UIView()
             sparkView.frame = CGRectMake(0, CGFloat(i) * 4, 20, 3)
-            sparkView.backgroundColor = lightTextColor
+            sparkView.backgroundColor = colorWithAlpha(tintColor, 0.5)
             sparkView.alpha = 0.2
             sparkViews.append(sparkView)
             addSubview(sparkView)

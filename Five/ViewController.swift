@@ -41,7 +41,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     override init() {
         super.init(nibName: nil, bundle: nil)
         tableView = UITableView(frame: CGRectZero, style: .Plain)
-
+        tableView.backgroundColor = UIColor.clearColor()
+        view.backgroundColor = bgColor
     }
     
     required init(coder aDecoder: NSCoder) {
@@ -137,6 +138,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         days.insert(day, atIndex: 0)
         tableView.insertRowsAtIndexPaths([NSIndexPath(forRow: 0, inSection: 0)], withRowAnimation: .Automatic)
+        
+        let detailViewController = DetailViewController()
+        detailViewController.data = uniqueNames(days[0])
+        navigationController?.pushViewController(detailViewController, animated: true)
     }
     
     func removeItems(items: [CKRecord], indexPath: NSIndexPath) {
@@ -157,7 +162,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         days.removeAtIndex(indexPath.row)
         tableView.cellForRowAtIndexPath(indexPath)?.setEditing(false, animated: false)
         tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
-        println(days)
     }
     
     func uniqueDays(records: [CKRecord]) -> [[CKRecord]] {
@@ -217,6 +221,7 @@ extension ViewController: UITableViewDataSource {
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! DayCell
+        cell.backgroundColor = UIColor.clearColor() 
         let data = uniqueNames(days[indexPath.row])
         
         let date = data[0][0].objectForKey("startTime") as! NSDate
@@ -243,7 +248,6 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         var data = uniqueNames(days[indexPath.row])
-        
         let detailViewController = DetailViewController()
         detailViewController.data = data
         navigationController?.pushViewController(detailViewController, animated: true)

@@ -10,7 +10,7 @@ import UIKit
 import CloudKit
 
 class DetailViewController: UIViewController, weightKeyboardDelegate, UITableViewDelegate, UITableViewDataSource {
-    
+    let animator = MenuAnimator()
     var data = [[CKRecord]]()
     var tabNames = [String]()
     var segmentedControl:UISegmentedControl!
@@ -37,6 +37,8 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     override init() {
         super.init(nibName: nil, bundle: nil)
+        transitioningDelegate = animator
+        modalPresentationStyle = .Custom
     }
     
     required init(coder aDecoder: NSCoder) {
@@ -55,7 +57,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         
         navigationItem.title = dateFormatter.stringFromDate(date)
         
-        view.backgroundColor = UIColor.whiteColor()
+        view.backgroundColor = bgColor
         
         tableView = UITableView(frame: CGRectZero, style: .Plain)
         tableView.registerClass(RepsCell.self, forCellReuseIdentifier: kCellIdentifier)
@@ -66,15 +68,16 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         tableView.rowHeight = 60
         tableView.allowsSelection = false
         tableView.scrollEnabled = false
+        tableView.backgroundColor = UIColor.clearColor()
         
         view.addSubview(tableView)
         
-        for i in 0...5 {
-            let x = CGFloat(i) * (view.frame.width - 41)/5 + 20
-            let gridLine = UIView(frame: CGRectMake(x, 80, 1, 310))
-            gridLine.backgroundColor = colorWithAlpha(lightTextColor, 0.25)
-            view.addSubview(gridLine)
-        }
+//        for i in 0...5 {
+//            let x = CGFloat(i) * (view.frame.width - 41)/5 + 20
+//            let gridLine = UIView(frame: CGRectMake(x, 80, 0.5, 310))
+//            gridLine.backgroundColor = backgroundColor
+//            view.addSubview(gridLine)
+//        }
         
         weightButton.setTitleColor(tintColor, forState: .Normal)
         weightButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Left
@@ -87,11 +90,11 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         separator.backgroundColor = colorWithAlpha(lightTextColor, 0.25)
         view.addSubview(separator)
         
-        increaseWeight = RoundedButton(color: tintColor, title: "+5")
+        increaseWeight = RoundedButton(color: tintColor, title: "")
         increaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: .TouchUpInside)
         view.addSubview(increaseWeight)
         
-        decreaseWeight = RoundedButton(color: accentColor, title: "-5")
+        decreaseWeight = RoundedButton(color: accentColor, title: "")
         decreaseWeight.addTarget(self, action: "changeWeight:", forControlEvents: .TouchUpInside)
         view.addSubview(decreaseWeight)
         
@@ -105,7 +108,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         decreaseWeight.frame = CGRectMake(view.frame.width - 118, view.frame.height - segmentedControl.frame.height - 64, 44, 44)
         segmentedControl.frame = CGRectMake(0, view.frame.height - 60, view.frame.width, 60)
         separator.frame = CGRectMake(20, view.frame.height - segmentedControl.frame.height - 1, view.frame.width - 40, 1)
-        tableView.frame = CGRectMake(20, 100, view.frame.width - 40, tableView.rowHeight * 6)
+        tableView.frame = CGRectMake(20, 90, view.frame.width - 40, tableView.rowHeight * 6)
     }
     
     func createSegmentedControl() {
@@ -150,8 +153,14 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             }
         }
         
-        weightButton.setTitle("\(newWeight.description)", forState: .Normal)
-        weightPerSideLabel.text = Float(weightPerSide(newWeight)).formatted
+        weightButton.setTitle("\(newWeight.description) lbs", forState: .Normal)
+        let string = Float(weightPerSide(newWeight)).formatted
+        
+        if weightPerSide(weight) != 0 {
+            weightPerSideLabel.text = String("\(string) lbs per side")
+        } else {
+            weightPerSideLabel.text = String("No added weight")
+        }
     }
     
     func changeWeight(sender: UIButton) {
@@ -214,18 +223,17 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
 extension DetailViewController: UITableViewDataSource {
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 5
+        return data[segmentedControl.selectedSegmentIndex].count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! RepsCell
+        cell.backgroundColor = UIColor.clearColor()
         cell.segmentedControl.addTarget(self, action: "repsSegmentChanged:", forControlEvents: .ValueChanged)
         cell.segmentedControl.tag = indexPath.row
         let cellReps = data[segmentedControl.selectedSegmentIndex][indexPath.row].objectForKey("Reps") as! Int
         cell.segmentedControl.selectedSegmentIndex = cellReps - 1
         cell.selectedSegments = cellReps
-        println("Row: \(indexPath.row), Reps: \(cellReps)")
-        
         
         if indexPath.row != 0 {
             if cell.segmentedControl.selectedSegmentIndex == -1 {
