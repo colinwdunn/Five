@@ -36,7 +36,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     var tableView = UITableView()
     let kCellIdentifier = "Cell"
-    var days:[[CKRecord]] = [[CKRecord]]()
+    var data:[[CKRecord]] = [[CKRecord]]()
     
     override init() {
         super.init(nibName: nil, bundle: nil)
@@ -87,7 +87,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             
             dispatch_async(dispatch_get_main_queue()) { () -> Void in
                 exercises = results as! [CKRecord]
-                self.days = self.uniqueDays(exercises)
+                self.data = self.buildIndex(exercises)
                 self.tableView.reloadData()
             }
         }
@@ -96,8 +96,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     func addItem() {
         var lastTypeIsZero = false
         
-        if !days.isEmpty {
-            if days[0][0].objectForKey("Type") as! Int == 0 {
+        if !data.isEmpty {
+            if data[0][0].objectForKey("Type") as! Int == 0 {
                 lastTypeIsZero = true   
             }
         }
@@ -109,37 +109,34 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         var day = [CKRecord]()
         
         for i in 1...3 {
-            for set in 1...5 {
-                let record = CKRecord(recordType: "Exercise")
-                record.setObject(startTime, forKey: "startTime")
-                record.setObject(45, forKey: "Weight")
-                record.setObject(0, forKey: "Reps")
-                record.setObject(set, forKey: "Set")
-                
-                if lastTypeIsZero {
-                    record.setObject(1, forKey: "Type")
-                    record.setObject(typeOneNames[i - 1], forKey: "Name")
-                } else {
-                    record.setObject(0, forKey: "Type")
-                    record.setObject(typeZeroNames[i - 1], forKey: "Name")
-                }
-                
-                exercises.insert(record, atIndex: 0)
-                day.append(record)
-                
-                db.saveRecord(record) { (record, error) -> Void in
-                    if error != nil {
-                        println(error.localizedDescription)
-                    }
+            let record = CKRecord(recordType: "Exercise")
+            record.setObject(startTime, forKey: "startTime")
+            record.setObject(45, forKey: "Weight")
+            record.setObject([0,0,0,0,0], forKey: "Reps")
+            
+            if lastTypeIsZero {
+                record.setObject(1, forKey: "Type")
+                record.setObject(typeOneNames[i - 1], forKey: "Name")
+            } else {
+                record.setObject(0, forKey: "Type")
+                record.setObject(typeZeroNames[i - 1], forKey: "Name")
+            }
+            
+            exercises.insert(record, atIndex: 0)
+            day.append(record)
+            
+            db.saveRecord(record) { (record, error) -> Void in
+                if error != nil {
+                    println(error.localizedDescription)
                 }
             }
         }
         
-        days.insert(day, atIndex: 0)
+        data.insert(day, atIndex: 0)
         tableView.insertRowsAtIndexPaths([NSIndexPath(forRow: 0, inSection: 0)], withRowAnimation: .Automatic)
         
         let detailViewController = DetailViewController()
-        detailViewController.data = uniqueNames(days[0])
+        detailViewController.data = data[0]
         
         navigationController?.pushViewController(detailViewController, animated: true)
     }
@@ -159,12 +156,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             }
         }
         
-        days.removeAtIndex(indexPath.row)
+        data.removeAtIndex(indexPath.row)
         tableView.cellForRowAtIndexPath(indexPath)?.setEditing(false, animated: false)
         tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
     }
     
-    func uniqueDays(records: [CKRecord]) -> [[CKRecord]] {
+    func buildIndex(records: [CKRecord]) -> [[CKRecord]] {
         var days = [NSDate: [CKRecord]]()
         
         for record in records {
@@ -182,67 +179,32 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             .map { sorted(days[$0]!) { $0.objectForKey("Name") as! Int! < $1.objectForKey("Name") as! Int! } }
     }
     
-    func uniqueNames(records: [CKRecord]) -> [[CKRecord]] {
-        var names = [Int]()
-        var result = [[CKRecord]]()
-        
-        for record in records {
-            var name = record.objectForKey("Name") as! Int
-            
-            if !contains(names, name) {
-                names.append(name)
-            }
-        }
-        
-        for name in names {
-            var recordForName = [CKRecord]()
-            
-            for (index, exercise) in enumerate(records) {
-                let existingName = exercise.objectForKey("Name") as! Int
-                
-                if name == existingName {
-                    let record = records[index] as CKRecord
-                    recordForName.append(record)
-                }
-            }
-            recordForName.sort { $0.objectForKey("Set") as! Int! < $1.objectForKey("Set") as! Int! }
-            result.append(recordForName)
-        }
-        
-        return result
-    }
-    
 }
 
 extension ViewController: UITableViewDataSource {
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return days.count
+        return data.count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! DayCell
         cell.backgroundColor = UIColor.clearColor()
-        let data = uniqueNames(days[indexPath.row])
         
         let highlightView = UIView()
         highlightView.backgroundColor = highlightColor
         cell.selectedBackgroundView = highlightView
         
-        let date = data[0][0].objectForKey("startTime") as! NSDate
+        let date = data[indexPath.row][0].objectForKey("startTime") as! NSDate
         let dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "EEEE, MMMM d"
         cell.date.text = dateFormatter.stringFromDate(date)
         
         for (index, row) in enumerate(cell.rows) {
-            row.name = data[index][0].objectForKey("Name") as! Int
-            row.weight = data[index][0].objectForKey("Weight") as! Int
-            row.reps = []
-            
-            for record in data[index] {
-                let rep = record.objectForKey("Reps") as! Int
-                row.reps.append(rep)
-            }
+            row.name = data[indexPath.row][index].objectForKey("Name") as! Int
+            row.weight = data[indexPath.row][index].objectForKey("Weight") as! Int
+            row.reps = data[indexPath.row][index].objectForKey("Reps") as! Array
         }
+
         return cell
     }
 }
@@ -251,14 +213,13 @@ extension ViewController: UITableViewDataSource {
 extension ViewController: UITableViewDelegate {
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        var data = uniqueNames(days[indexPath.row])
         let detailViewController = DetailViewController()
-        detailViewController.data = data
+        detailViewController.data = data[indexPath.row]
         navigationController?.pushViewController(detailViewController, animated: true)
     }
     
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        let items = days[indexPath.row]
+        let items = data[indexPath.row]
         self.removeItems(items, indexPath: indexPath)
     }
 }
