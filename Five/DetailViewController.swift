@@ -10,13 +10,22 @@ import UIKit
 import CloudKit
 
 class DetailViewController: UIViewController, weightKeyboardDelegate, UITableViewDelegate, UITableViewDataSource {
-    let animator = MenuAnimator()
+    
+    override init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init(coder aDecoder: NSCoder) {
+        super.init(coder: NSCoder())
+    }
+    
     var data = [[CKRecord]]()
     var tabNames = [String]()
     var segmentedControl:UISegmentedControl!
     let separator = UIView()
     var weight:Int! {
         didSet {
+            println("Weight set")
             setWeight(weight)
         }
     }
@@ -35,15 +44,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     var reps: Int!
     var name: Int!
     
-    override init() {
-        super.init(nibName: nil, bundle: nil)
-        transitioningDelegate = animator
-        modalPresentationStyle = .Custom
-    }
-    
-    required init(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    let transitionManger = TransitionManger()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -94,6 +95,10 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         weight = data[segmentedControl.selectedSegmentIndex][0].objectForKey("Weight") as! Int
     }
     
+    override func viewDidAppear(animated: Bool) {
+        println("View did appear")
+    }
+    
     override func viewDidLayoutSubviews() {
         weightButton.frame = CGRectMake(20, view.frame.height - segmentedControl.frame.height - 70, view.frame.width, 20)
         weightPerSideLabel.frame = CGRectMake(20, weightButton.frame.origin.y + 25, view.frame.width, 20)
@@ -128,8 +133,10 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         let weightKeyboard = WeightKeyboardViewController()
         weightKeyboard.weight = weight
         weightKeyboard.delegate = self
-        self.presentViewController(weightKeyboard, animated: true) { () -> Void in
-        }
+        weightKeyboard.modalPresentationStyle = .Custom
+        weightKeyboard.transitioningDelegate = transitionManger
+        transitionManger.presentingController = weightKeyboard
+        navigationController?.presentViewController(weightKeyboard, animated: true, completion: nil)
     }
     
     func setWeight(newWeight: Int) {

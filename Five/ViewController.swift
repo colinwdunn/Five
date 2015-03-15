@@ -141,6 +141,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         
         let detailViewController = DetailViewController()
         detailViewController.data = uniqueNames(days[0])
+        
         navigationController?.pushViewController(detailViewController, animated: true)
     }
     

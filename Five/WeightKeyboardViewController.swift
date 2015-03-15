@@ -14,23 +14,17 @@ import UIKit
 }
 
 class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate {
-    let animator = MenuAnimator()
-    let background = UIView()
-    let cancel = UIButton()
-    let topTitle = UILabel()
-    let done = UIButton()
-    let divider = UIView()
-    let weightPerSideLabel = UILabel()
+    var background = UIVisualEffectView(effect: UIBlurEffect(style: UIBlurEffectStyle.ExtraLight)) as UIVisualEffectView
     var weight:Int!
     let picker = UIPickerView()
     var pickerData = [Int]()
     var lbsLabel = UILabel()
+    let border = UIView()
     
     var delegate: weightKeyboardDelegate?
     
     override init() {
         super.init(nibName: nil, bundle: nil)
-        transitioningDelegate = animator
         modalPresentationStyle = .Custom
         picker.delegate = self
         picker.dataSource = self
@@ -43,44 +37,14 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        for var index = 45; index <= 250; index += 5 {
+        for var index = 45; index <= 500; index += 5 {
             pickerData.append(index)
         }
         
         picker.selectRow((weight - 45) / 5, inComponent: 0, animated: false)
         
-        background.backgroundColor = UIColor.whiteColor()
         view.addSubview(background)
-        
-        cancel.frame = CGRectMake(15, 0, 100, 45)
-        cancel.setTitle("Cancel", forState: .Normal)
-        cancel.setTitleColor(tintColor, forState: .Normal)
-        cancel.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Left
-        cancel.addTarget(self, action: "dismiss", forControlEvents: .TouchUpInside)
-        background.addSubview(cancel)
-        
-        topTitle.text = "Select Weight"
-        topTitle.textColor = textColor
-        topTitle.font = UIFont(name: "HelveticaNeue-Medium", size: 18)
-        topTitle.textAlignment = NSTextAlignment.Center
-        background.addSubview(topTitle)
-        
-        done.setTitle("Done", forState: .Normal)
-        done.setTitleColor(tintColor, forState: .Normal)
-        done.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Right
-        done.addTarget(self, action: "doneTap", forControlEvents: .TouchUpInside)
-        background.addSubview(done)
-        
-        divider.backgroundColor = textColor
-        divider.alpha = 0.2
-        background.addSubview(divider)
-        
         background.addSubview(picker)
-        
-        weightPerSideLabel.textColor = lightTextColor
-        weightPerSideLabel.textAlignment = .Right
-        weightPerSideLabel.font = UIFont.systemFontOfSize(14)
-        background.addSubview(weightPerSideLabel)
         
         lbsLabel.textColor = textColor
         lbsLabel.text = "lbs"
@@ -91,23 +55,13 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
     }
     
     override func viewDidLayoutSubviews() {
-        background.frame = CGRectMake(0, view.frame.size.height - 225, view.frame.size.width, view.frame.size.height)
-        topTitle.frame = CGRectMake((view.frame.size.width - 200) / 2, -1, 200, 45)
-        done.frame = CGRectMake(view.frame.size.width - 115, 0, 100, 45)
-        divider.frame = CGRectMake(0, 45, view.frame.size.width, 1)
-        picker.frame = CGRectMake(0, 45, view.frame.size.width, 180)
-        weightPerSideLabel.frame = CGRectMake(0, 120, view.frame.width / 2 - 50, 30)
-        lbsLabel.frame = CGRectMake(view.frame.width / 2 + 28, 121, view.frame.width / 2 + 50, 30)
+        background.frame = CGRectMake(0, view.frame.height - picker.frame.height, view.frame.size.width, view.frame.size.height)
+        picker.frame = CGRectMake(0, 0, view.frame.size.width, 180)
+        lbsLabel.frame = CGRectMake(view.frame.width / 2 + 28, 76, view.frame.width / 2 + 50, 30)
     }
     
-    func dismiss() {
-        self.dismissViewControllerAnimated(true, completion: { () -> Void in
-        })
-    }
-    
-    func doneTap() {
+    override func viewWillDisappear(animated: Bool) {
         delegate?.setWeight?(weight)
-        dismiss()
     }
     
     func pickerView(pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
@@ -130,7 +84,6 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
     func setWeightPerSideLabel() {
         let weight = (pickerData[picker.selectedRowInComponent(0)].description).toInt()
         var weightPerSide = delegate?.weightPerSide!(weight!).formatted
-        weightPerSideLabel.text = String("\(weightPerSide!) lbs per side")
     }
 
 }
