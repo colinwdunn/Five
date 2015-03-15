@@ -13,6 +13,7 @@ let accentColor = UIColor(red: 255/255, green: 92/255, blue: 51/255, alpha: 1)
 let textColor = UIColor(red: 37/255, green: 40/255, blue: 43/255, alpha: 1)
 let lightTextColor = UIColor(red: 123/255, green: 137/255, blue: 148/255, alpha: 1)
 let bgColor = UIColor(red: 234/255, green: 236/255, blue: 241/255, alpha: 1)
+let highlightColor = UIColor(red: 214/255, green: 218/255, blue: 227/255, alpha: 1)
 
 func colorWithAlpha(color: UIColor, alpha: CGFloat) -> UIColor {
     let color = color

@@ -25,7 +25,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     let separator = UIView()
     var weight:Int! {
         didSet {
-            println("Weight set")
             setWeight(weight)
         }
     }
@@ -93,10 +92,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         view.addSubview(decreaseWeight)
         
         weight = data[segmentedControl.selectedSegmentIndex][0].objectForKey("Weight") as! Int
-    }
-    
-    override func viewDidAppear(animated: Bool) {
-        println("View did appear")
     }
     
     override func viewDidLayoutSubviews() {

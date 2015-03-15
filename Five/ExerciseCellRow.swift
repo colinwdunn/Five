@@ -72,5 +72,8 @@ class ExerciseCellRow: UIView {
             view.frame.origin.x = frame.width - 60
         }
     }
+}
 
+extension UIView {
+    
 }

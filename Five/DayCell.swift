@@ -28,7 +28,6 @@ class DayCell: UITableViewCell {
         }
         
         separator.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.1)
-//        contentView.addSubview(separator)
     }
     
     required init(coder aDecoder: NSCoder) {
@@ -43,6 +42,15 @@ class DayCell: UITableViewCell {
         
         for (index, row) in enumerate(rows) {
             row.frame = CGRectMake(15, 50 + 30 * CGFloat(index), contentView.frame.width, 45)
+        }
+    }
+    
+    override func setHighlighted(highlighted: Bool, animated: Bool) {
+        super.setHighlighted(highlighted, animated: animated)
+        for row in rows {
+            for sparkView in row.sparkViews {
+                sparkView.backgroundColor = tintColor
+            }
         }
     }
 }

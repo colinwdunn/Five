@@ -65,7 +65,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     override func viewWillAppear(animated: Bool) {
         loadItems()
-
         let selection = tableView.indexPathForSelectedRow()
         if (selection != nil) {
             tableView.deselectRowAtIndexPath(selection!, animated: true)
@@ -222,8 +221,12 @@ extension ViewController: UITableViewDataSource {
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier(kCellIdentifier) as! DayCell
-        cell.backgroundColor = UIColor.clearColor() 
+        cell.backgroundColor = UIColor.clearColor()
         let data = uniqueNames(days[indexPath.row])
+        
+        let highlightView = UIView()
+        highlightView.backgroundColor = highlightColor
+        cell.selectedBackgroundView = highlightView
         
         let date = data[0][0].objectForKey("startTime") as! NSDate
         let dateFormatter = NSDateFormatter()
