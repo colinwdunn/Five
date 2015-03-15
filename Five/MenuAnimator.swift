@@ -23,7 +23,7 @@ extension MenuAnimator: UIViewControllerAnimatedTransitioning {
         var controller:UIViewController
         var transform:CGAffineTransform
         
-        if self.isPresenting {
+        if isPresenting {
             controller = transitionContext.viewControllerForKey(UITransitionContextToViewControllerKey)!
             controller.view.transform = CGAffineTransformMakeTranslation(0, 225)
             transform = CGAffineTransformIdentity
@@ -53,12 +53,12 @@ extension MenuAnimator: UIViewControllerTransitioningDelegate {
     }
     
     func animationControllerForPresentedController(presented: UIViewController, presentingController presenting: UIViewController, sourceController source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        self.isPresenting = true
+        isPresenting = true
         return self
     }
     
     func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        self.isPresenting = false
+        isPresenting = false
         return self
     }
     

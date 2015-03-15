@@ -96,11 +96,11 @@
 			children = (
 				62B87E9A1A7B33E600E704E8 /* Five.entitlements */,
 				62B87E7A1A7B324D00E704E8 /* AppDelegate.swift */,
-				6287A27B1AB4F34F0014CC28 /* MenuAnimator.swift */,
-				6287A27C1AB4F34F0014CC28 /* MenuPresentationController.swift */,
 				62FD07F81A87F196009B6192 /* View Controllers */,
 				62FD07F71A87F17F009B6192 /* Views */,
 				62FD07F91A87F1AD009B6192 /* Cells */,
+				6287A27B1AB4F34F0014CC28 /* MenuAnimator.swift */,
+				6287A27C1AB4F34F0014CC28 /* MenuPresentationController.swift */,
 				62B87E811A7B324D00E704E8 /* Images.xcassets */,
 				62B87E781A7B324D00E704E8 /* Supporting Files */,
 			);

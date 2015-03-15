@@ -12,8 +12,8 @@ class MenuPresentationController: UIPresentationController {
     
     lazy var dimmingView:UIView = {
         let view = UIView(frame: self.containerView!.bounds)
-        view.backgroundColor = UIColor(white: 0.0, alpha: 0.5)
-        view.alpha = 0.0
+        view.backgroundColor = textColor
+        view.alpha = 0
         return view
         }()
     
@@ -26,7 +26,7 @@ class MenuPresentationController: UIPresentationController {
         // Fade in the dimming view alongside the transition
         let transitionCoordinator = presentingViewController.transitionCoordinator()
         transitionCoordinator!.animateAlongsideTransition({(context: UIViewControllerTransitionCoordinatorContext!) -> Void in
-            self.dimmingView.alpha  = 1.0
+            self.dimmingView.alpha  = 0.5
             }, completion:nil)
     }
     
@@ -37,9 +37,9 @@ class MenuPresentationController: UIPresentationController {
     }
     
     override func dismissalTransitionWillBegin() {
-        let transitionCoordinator = self.presentingViewController.transitionCoordinator()
+        let transitionCoordinator = presentingViewController.transitionCoordinator()
         transitionCoordinator!.animateAlongsideTransition({(context: UIViewControllerTransitionCoordinatorContext!) -> Void in
-            self.dimmingView.alpha  = 0.0
+            self.dimmingView.alpha  = 0
             }, completion:nil)
     }
     
@@ -51,11 +51,11 @@ class MenuPresentationController: UIPresentationController {
     
     override func frameOfPresentedViewInContainerView() -> CGRect {
         let height = CGRectGetHeight(containerView.bounds)
-        return CGRect(x: 0.0, y: height, width: CGRectGetWidth(self.containerView.bounds), height: CGRectGetHeight(self.containerView.bounds)-height)
+        return CGRect(x: 0.0, y: height, width: CGRectGetWidth(containerView.bounds), height: CGRectGetHeight(containerView.bounds)-height)
     }
     
     override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator transitionCoordinator: UIViewControllerTransitionCoordinator) {
-        self.viewWillTransitionToSize(size, withTransitionCoordinator: transitionCoordinator)
+        viewWillTransitionToSize(size, withTransitionCoordinator: transitionCoordinator)
         
         transitionCoordinator.animateAlongsideTransition({(context: UIViewControllerTransitionCoordinatorContext!) -> Void in
             self.dimmingView.frame = self.containerView.bounds

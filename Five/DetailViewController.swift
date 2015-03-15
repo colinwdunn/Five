@@ -72,13 +72,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         
         view.addSubview(tableView)
         
-//        for i in 0...5 {
-//            let x = CGFloat(i) * (view.frame.width - 41)/5 + 20
-//            let gridLine = UIView(frame: CGRectMake(x, 80, 0.5, 310))
-//            gridLine.backgroundColor = backgroundColor
-//            view.addSubview(gridLine)
-//        }
-        
         weightButton.setTitleColor(tintColor, forState: .Normal)
         weightButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Left
         weightButton.setTitleColor(colorWithAlpha(tintColor, 0.5), forState: .Highlighted)
