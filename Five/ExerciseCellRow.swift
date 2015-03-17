@@ -13,6 +13,19 @@ class ExerciseCellRow: UIView {
     let nameLabel = UILabel()
     let weightLabel = UILabel()
     let font = UIFont.systemFontOfSize(16)
+    var indicator = UIImageView()
+    var indicatorValue:Int! {
+        didSet {
+            if indicatorValue == -1 {
+                indicator.image = UIImage(named: "downArrow.png")
+            } else if indicatorValue == 1 {
+                indicator.image = UIImage(named: "upArrow.png")
+            } else if indicatorValue == 0 {
+                indicator.image = nil
+            }
+        }
+    }
+    
     var name:Int! {
         didSet {
             nameLabel.text = exerciseName(rawValue: name)?.description()
@@ -47,6 +60,7 @@ class ExerciseCellRow: UIView {
         weightLabel.textColor = lightTextColor
         addSubview(nameLabel)
         addSubview(weightLabel)
+        addSubview(indicator)
         
         for i in 1...5 {
             let sparkView = UIView()
@@ -67,13 +81,10 @@ class ExerciseCellRow: UIView {
         
         nameLabel.frame = CGRectMake(0, 0, frame.width / 2, 30)
         weightLabel.frame = CGRectMake(frame.width / 2, 0, frame.width / 2, 30)
+        indicator.frame = CGRectMake(frame.width / 2 - 15, 12, 8, 5)
         
         for view in sparkViews {
             view.frame.origin.x = frame.width - 60
         }
     }
-}
-
-extension UIView {
-    
 }

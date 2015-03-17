@@ -103,7 +103,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         }
         
         var startTime = NSDate()
-        
         let typeZeroNames = [exerciseName.Squat.rawValue, exerciseName.BenchPress.rawValue, exerciseName.Row.rawValue]
         let typeOneNames = [exerciseName.Squat.rawValue, exerciseName.OverheadPress.rawValue, exerciseName.Deadlift.rawValue]
         var day = [CKRecord]()
@@ -111,7 +110,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         for i in 1...3 {
             let record = CKRecord(recordType: "Exercise")
             record.setObject(startTime, forKey: "startTime")
-            record.setObject(45, forKey: "Weight")
             record.setObject([0,0,0,0,0], forKey: "Reps")
             
             if lastTypeIsZero {
@@ -120,6 +118,14 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             } else {
                 record.setObject(0, forKey: "Type")
                 record.setObject(typeZeroNames[i - 1], forKey: "Name")
+            }
+            
+            let exercisesForName = exercises.filter { ($0.objectForKey("Name") as! Int) == record.objectForKey("Name") as! Int }
+            if !exercisesForName.isEmpty {
+                let previousWeight = exercisesForName[0].objectForKey("Weight") as! Int
+                record.setObject(previousWeight, forKey: "Weight")
+            } else {
+                record.setObject(45, forKey: "Weight")
             }
             
             exercises.insert(record, atIndex: 0)
@@ -179,6 +185,19 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             .map { sorted(days[$0]!) { $0.objectForKey("Name") as! Int! < $1.objectForKey("Name") as! Int! } }
     }
     
+    func previousWeightForName(record: CKRecord) -> Int? {
+        let exercisesForName = exercises.filter { ($0.objectForKey("Name") as! Int) == record.objectForKey("Name") as? Int }
+        
+        if let referenceIndex = find(exercisesForName, record) {
+            if referenceIndex + 1 < exercisesForName.count {
+                return exercisesForName[referenceIndex + 1].objectForKey("Weight") as? Int
+            } else {
+                return nil
+            }
+        } else {
+            return nil
+        }
+    }
 }
 
 extension ViewController: UITableViewDataSource {
@@ -203,6 +222,16 @@ extension ViewController: UITableViewDataSource {
             row.name = data[indexPath.row][index].objectForKey("Name") as! Int
             row.weight = data[indexPath.row][index].objectForKey("Weight") as! Int
             row.reps = data[indexPath.row][index].objectForKey("Reps") as! Array
+            
+            if let previousWeight = previousWeightForName(data[indexPath.row][index]) {
+                if row.weight > previousWeight {
+                    row.indicatorValue = 1
+                } else if row.weight < previousWeight {
+                    row.indicatorValue = -1
+                } else if row.weight == previousWeight {
+                    row.indicatorValue = 0
+                }
+            }
         }
 
         return cell

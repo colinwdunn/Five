@@ -64,6 +64,19 @@ class WeightKeyboardViewController: UIViewController, UIPickerViewDataSource, UI
         delegate?.setWeight?(weight)
     }
     
+//    func pickerView(pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusingView view: UIView!) -> UIView {
+//        var pickerViewLabel = UILabel()
+//        pickerViewLabel = UILabel(frame: CGRectMake(0, 0, picker.rowSizeForComponent(component).width, picker.rowSizeForComponent(component).height))
+//        pickerViewLabel.textAlignment = NSTextAlignment.Center
+//        pickerViewLabel.text = pickerData[row].description
+//        pickerViewLabel.font = UIFont(name: "SanFranciscoText-Medium", size: 18)
+//        return pickerViewLabel
+//    }
+    
+//    func pickerView(pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
+//        return NSAttributedString(string: pickerData[row].description, attributes: [NSForegroundColorAttributeName:UIColor.whiteColor()])
+//    }
+    
     func pickerView(pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         return pickerData.count
     }

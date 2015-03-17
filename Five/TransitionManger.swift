@@ -22,7 +22,6 @@ class TransitionManger: UIPercentDrivenInteractiveTransition, UIViewControllerAn
     let dimmingView = UIView()
     
     private var isInteractive = false
-    private var pinchGesture = UIPinchGestureRecognizer()
     private var panGesture = UIPanGestureRecognizer()
     
     func animateTransition(transitionContext: UIViewControllerContextTransitioning) {
@@ -36,7 +35,7 @@ class TransitionManger: UIPercentDrivenInteractiveTransition, UIViewControllerAn
         if isPresenting {
             containerView.addSubview(dimmingView)
             containerView.addSubview(toViewController!.view)
-            toViewController?.view.frame.origin.y = height!
+            toViewController?.view.frame.origin.y = 180
             dimmingView.alpha = 0
             
             UIView.animateWithDuration(transitionDuration(transitionContext), delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 8, options: nil, animations: { () -> Void in
@@ -48,10 +47,14 @@ class TransitionManger: UIPercentDrivenInteractiveTransition, UIViewControllerAn
         } else {
             UIView.animateWithDuration(transitionDuration(transitionContext), delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 8, options: nil, animations: { () -> Void in
                 self.dimmingView.alpha = 0
-                fromViewController?.view.frame.origin.y = height!
+                fromViewController?.view.frame.origin.y = 180
             }, completion: { (Bool) -> Void in
-                transitionContext.completeTransition(true)
-                fromViewController?.view.removeFromSuperview()
+                if transitionContext.transitionWasCancelled() {
+                    transitionContext.completeTransition(false)
+                } else {
+                    transitionContext.completeTransition(true)
+                    fromViewController?.view.removeFromSuperview()
+                }
             })
         }
     }
@@ -77,7 +80,8 @@ class TransitionManger: UIPercentDrivenInteractiveTransition, UIViewControllerAn
     
     func dismissGesture(sender: UIPanGestureRecognizer) {
         let translation = sender.translationInView(sender.view!)
-        let delta = translation.y / CGRectGetHeight(sender.view!.bounds) * 0.25
+        let delta = translation.y / CGRectGetHeight(sender.view!.bounds)
+        let velocity = sender.velocityInView(sender.view!)
         
         switch (sender.state) {
         case UIGestureRecognizerState.Began:
@@ -90,8 +94,12 @@ class TransitionManger: UIPercentDrivenInteractiveTransition, UIViewControllerAn
             break
             
         default:
-            isInteractive = false
-            finishInteractiveTransition()
+            if velocity.y > 0 {
+                finishInteractiveTransition()
+                isInteractive = false
+            } else {
+                cancelInteractiveTransition()
+            }
         }
     }
 }

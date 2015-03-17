@@ -9,14 +9,14 @@
 import UIKit
 import CloudKit
 
-class DetailViewController: UIViewController, weightKeyboardDelegate, UITableViewDelegate, UITableViewDataSource {
-    
+class DetailViewController: UIViewController, weightKeyboardDelegate, UITableViewDelegate, UITableViewDataSource, timerViewDelegate {
+
     override init() {
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init(coder aDecoder: NSCoder) {
-        super.init(coder: NSCoder())
+        fatalError("init(coder:) has not been implemented")
     }
     
     var data = [CKRecord]()
@@ -38,9 +38,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
     
     var tableView: UITableView!
     
-    var startTime: NSDate!
-    var type: Int!
-    var name: Int!
+    var timer = TimerView()
     
     let transitionManger = TransitionManger()
     
@@ -91,6 +89,13 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         view.addSubview(decreaseWeight)
         
         weight = data[segmentedControl.selectedSegmentIndex].objectForKey("Weight") as! Int
+        
+        timer.alpha = 0
+        timer.delegate = self
+        timer.stroke = 5
+        timer.size = 34
+        timer.color = lightTextColor
+        view.addSubview(timer)
     }
     
     override func viewDidLayoutSubviews() {
@@ -101,6 +106,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         segmentedControl.frame = CGRectMake(0, view.frame.height - 60, view.frame.width, 60)
         separator.frame = CGRectMake(20, view.frame.height - segmentedControl.frame.height - 1, view.frame.width - 40, 1)
         tableView.frame = CGRectMake(20, 90, view.frame.width - 40, tableView.rowHeight * 6)
+        timer.frame = CGRectMake(view.frame.width / 2 - 100, tableView.frame.height, 200, 200)
     }
     
     func createSegmentedControl() {
@@ -144,7 +150,6 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             modifyItem()
             data[segmentedControl.selectedSegmentIndex].setObject(newWeight, forKey: "Weight")
         }
-        
         
         weightButton.setTitle("\(newWeight.description) lbs", forState: .Normal)
         let string = Float(weightPerSide(newWeight)).formatted
@@ -198,6 +203,7 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
         }
         
         modifyItem()
+        timer.time = 90
     }
     
     func modifyItem() {
@@ -208,6 +214,18 @@ class DetailViewController: UIViewController, weightKeyboardDelegate, UITableVie
             }
         }
         db.addOperation(operation)
+    }
+    
+    func timerStateChanged(state: Bool) {
+        
+        UIView.animateWithDuration(1, delay: 0, usingSpringWithDamping: 1.0, initialSpringVelocity: 9, options: nil, animations: { () -> Void in
+            if state == true {
+                self.timer.alpha = 1
+            } else {
+                self.timer.alpha = 0
+            }
+            
+        }, completion: nil)
     }
 }
 

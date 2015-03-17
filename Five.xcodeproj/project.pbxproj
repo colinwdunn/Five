@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		623A9E111AABD77900CB8171 /* ExerciseCellRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 623A9E101AABD77900CB8171 /* ExerciseCellRow.swift */; };
+		624C765D1AB7FF4700301B3F /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 624C765C1AB7FF4700301B3F /* TimerView.swift */; };
 		6268EE1D1A7F286A00BA3CC7 /* DayCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6268EE1C1A7F286A00BA3CC7 /* DayCell.swift */; };
 		627774D41A88035C00B7C66B /* RepsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 627774D31A88035C00B7C66B /* RepsCell.swift */; };
 		629A76F61A87D5AC0099C59C /* RoundedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629A76F51A87D5AC0099C59C /* RoundedButton.swift */; };
@@ -33,6 +34,7 @@
 
 /* Begin PBXFileReference section */
 		623A9E101AABD77900CB8171 /* ExerciseCellRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExerciseCellRow.swift; sourceTree = "<group>"; };
+		624C765C1AB7FF4700301B3F /* TimerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		6268EE1C1A7F286A00BA3CC7 /* DayCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DayCell.swift; sourceTree = "<group>"; };
 		627774D31A88035C00B7C66B /* RepsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RepsCell.swift; sourceTree = "<group>"; };
 		629A76F51A87D5AC0099C59C /* RoundedButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RoundedButton.swift; sourceTree = "<group>"; };
@@ -93,8 +95,8 @@
 			isa = PBXGroup;
 			children = (
 				62B87E9A1A7B33E600E704E8 /* Five.entitlements */,
-				62A816A81AB5514E006F59C7 /* TransitionManger.swift */,
 				62B87E7A1A7B324D00E704E8 /* AppDelegate.swift */,
+				62A816A81AB5514E006F59C7 /* TransitionManger.swift */,
 				62FD07F81A87F196009B6192 /* View Controllers */,
 				62FD07F71A87F17F009B6192 /* Views */,
 				62FD07F91A87F1AD009B6192 /* Cells */,
@@ -132,6 +134,7 @@
 		62FD07F71A87F17F009B6192 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				624C765C1AB7FF4700301B3F /* TimerView.swift */,
 				623A9E101AABD77900CB8171 /* ExerciseCellRow.swift */,
 				629A76F51A87D5AC0099C59C /* RoundedButton.swift */,
 			);
@@ -261,6 +264,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				624C765D1AB7FF4700301B3F /* TimerView.swift in Sources */,
 				623A9E111AABD77900CB8171 /* ExerciseCellRow.swift in Sources */,
 				627774D41A88035C00B7C66B /* RepsCell.swift in Sources */,
 				62B87EA21A7B651E00E704E8 /* WeightKeyboardViewController.swift in Sources */,
